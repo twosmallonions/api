@@ -6,23 +6,20 @@ databaseChangeLog:
         - sqlFile:
             path: changesets/001_initial.sql
             relativeToChangelogFile: true
-            stripComments: true
   - changeSet:
       id: 2
       author: Marius Meschter
       changes:
-        - addDefaultValue:
-            tableName: recipe
-            columnName: modified
-            defaultValueComputed: current_timestamp
+        - sqlFile:
+            path: changesets/002_ingredients.sql
+            relativeToChangelogFile: true
   - changeSet:
       id: 3
       author: Marius Meschter
       changes:
         - sqlFile:
-            path: changesets/003_ingredients_steps.sql
+            path: changesets/003_steps.sql
             relativeToChangelogFile: true
-            stripComments: true
   - changeSet:
       id: 4
       author: Marius Meschter
@@ -30,4 +27,10 @@ databaseChangeLog:
         - sqlFile:
             path: changesets/004_user_tags.sql
             relativeToChangelogFile: true
-            stripComments: true
+  - changeSet:
+      id: 5
+      author: Marius Meschter
+      changes:
+        - sqlFile:
+            path: changesets/005_images.sql
+            relativeToChangelogFile: true

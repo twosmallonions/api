@@ -1,0 +1,115 @@
+services:
+  db:
+    image: postgres:17
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - KEYCLOAK_DB_NAME=${KEYCLOAK_DB_NAME}
+      - KEYCLOAK_DB_USERNAME=${KEYCLOAK_DB_USERNAME}
+      - KEYCLOAK_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./01_pg_init.sh:/docker-entrypoint-initdb.d/01_pg_init.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "postgres"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 80s
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command: start-dev --health-enabled=true --features="admin-fine-grained-authz,token-exchange"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=postgres
+      - KC_DB_URL_HOST=db
+      - KC_DB_URL_PORT=5432
+      - KC_DB_DATABASE=${KEYCLOAK_DB_NAME}
+      - KC_DB_USERNAME=${KEYCLOAK_DB_USERNAME}
+      - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      - KC_HOSTNAME=https://llama-funny-quail.ngrok-free.app
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
+  minio:
+    image: quay.io/minio/minio
+    volumes:
+      - minio_data:/data
+    ports:
+      - 9000:9000
+      - 9001:9001
+    command: server /data --console-address ":9001"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    environment:
+      - MINIO_IDENTITY_OPENID_CONFIG_URL=${MINIO_IDENTITY_OPENID_CONFIG_URL}
+      - MINIO_IDENTITY_OPENID_CLIENT_ID=${MINIO_IDENTITY_OPENID_CLIENT_ID}
+      - MINIO_IDENTITY_OPENID_CLIENT_SECRET=${MINIO_IDENTITY_OPENID_CLIENT_SECRET}
+      - MINIO_IDENTITY_OPENID_CLAIM_NAME=${MINIO_IDENTITY_OPENID_CLAIM_NAME}
+      - MINIO_IDENTITY_OPENID_SCOPES=${MINIO_IDENTITY_OPENID_SCOPES}
+      - MINIO_BROWSER_REDIRECT_URL=${MINIO_BROWSER_REDIRECT_URL}
+      - MINIO_IDENTITY_OPENID_COMMENT=${MINIO_IDENTITY_OPENID_COMMENT}
+  imgproxy:
+    image: darthsim/imgproxy:latest
+    ports:
+      - 8081:8080
+    environment:
+      - IMGPROXY_USE_S3=true
+      - AWS_ACCESS_KEY_ID=${IMGPROXY_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${IMGPROXY_AWS_SECRET_ACCESS_KEY}
+      - IMGPROXY_S3_ENDPOINT=https://f684aa8be0e21c565c4c3e9ea2150d7c.r2.cloudflarestorage.com/tso-dev
+      - IMGPROXY_LOG_LEVEL=debug
+      - IMGPROXY_S3_REGION=auto
+    depends_on:
+      - minio
+  auth_cache:
+    image: valkey/valkey:8-bookworm
+    ports:
+      - 6379:6379
+    volumes:
+      - auth_cache_data:/data
+  scraper_cache:
+    image: valkey/valkey:8-bookworm
+    ports:
+      - 6380:6379
+    volumes:
+      - scrape_cache_data:/data
+  bff:
+    build: './../../bff'
+    environment:
+      - BFF_OIDC_ISSUER=${BFF_OIDC_ISSUER}
+      - BFF_OIDC_CLIENT_ID=${BFF_OIDC_CLIENT_ID}
+      - BFF_OIDC_CLIENT_SECRET=${BFF_OIDC_CLIENT_SECRET}
+      - BFF_OIDC_SCOPES=${BFF_OIDC_SCOPES}
+      - BFF_REDIS_URL=${BFF_REDIS_URL}
+      - BFF_BASE_URL=${BFF_BASE_URL}
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      auth_cache:
+        condition: service_started
+  nginx:
+    image: nginx
+    volumes:
+      - './../../bff/nginx/nginx.conf:/etc/nginx/nginx.conf'
+      - './../../bff/nginx/conf.d:/etc/nginx/conf.d'
+    ports:
+      - "8085:80"
+    depends_on:
+      - bff
+volumes:
+  pg_data:
+  minio_data:
+  auth_cache_data:
+  scrape_cache_data:
+name: tso_api

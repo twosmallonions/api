@@ -1,19 +1,21 @@
 package com.twosmallonions.api.recipe.dto;
 
+import com.twosmallonions.api.tags.dto.TagDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.URI;
+import java.net.URL;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class RecipeDTO {
-    private long id;
     private String subject;
     private String slug;
     private String title;
@@ -28,5 +30,7 @@ public class RecipeDTO {
     private int totalTime;
     private String note;
     private String image;
-    private UUID uuid;
+    private UUID id;
+    private List<URL> coverImage;
+    private boolean liked;
 }

@@ -1,14 +1,21 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: "http://localhost:8080/realms/tso"
+          issuer-uri: ${OIDC_ISSUER}
           jws-algorithms: ["RS256"]
+          audiences: "tso_api"
   application:
     name: api
   datasource:
-    url: jdbc:postgresql://localhost:5432/tso_api?user=postgres&password=dev
+    url: ${DB_JDBC_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: none
@@ -21,3 +28,26 @@ server:
 logging:
   level:
     web: debug
+    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.test.context.support: DEBUG
+    org.springframework.boot.context.config: DEBUG
+    org.springframework.security.oauth2: TRACE
+    org.springframework.security.oauth2.server.resource.authentication: DEBUG
+    org.springframework.security.oauth2.jwt: DEBUG
+tso:
+  upload:
+    endpoint: ${USER_IMAGE_ENDPOINT}
+    user-image-bucket: ${USER_IMAGE_BUCKET}
+    aws-access-key: ${AWS_ACCESS_KEY}
+    aws-secret-key: ${AWS_SECRET_KEY}
+    imgproxy-base-url: http://127.0.0.1:8081
+    region: auto
+  scraper:
+    py:
+      uri: http://127.0.0.1:8001
+      secret: insecure
+
+management:
+  server:
+    port: 9517

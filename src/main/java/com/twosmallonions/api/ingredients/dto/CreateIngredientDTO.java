@@ -1,20 +1,18 @@
 package com.twosmallonions.api.ingredients.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
-
-import java.util.UUID;
 
 @Data
 public class CreateIngredientDTO {
     @NotBlank
-    String title;
-    Boolean heading = false;
+    private String notes;
+    private Boolean heading = false;
 
-    String parsed_ingredient;
+    private String parsedIngredient;
 
-    double parsed_original_amount;
-    String parsed_original_unit;
-    String original_measurement_system;
-
+    private double parsedOriginalAmount;
+    private String parsedOriginalUnit;
+    private String originalMeasurementSystem;
 }

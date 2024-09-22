@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "user_tags")
@@ -25,7 +26,10 @@ public class Tag {
     private String color;
     @Column(nullable = false)
     private String subject;
+    @Column(insertable = false, updatable = false, nullable = false)
+    @Generated
+    private UUID uuid;
 
-    @ManyToMany(mappedBy = "tags")
-    private Set<Recipe> recipes = new HashSet<>();
+    //@ManyToMany(mappedBy = "tags")
+    //private Set<Recipe> recipes = new HashSet<>();
 }

@@ -1,0 +1,89 @@
+### Simple create recipe
+POST http://localhost:8000/recipe
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+{
+  "title": "A Test Recipe",
+  "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam mattis gravida magna et condimentum. Nullam aliquet lobortis mi nec imperdiet. Ut ornare mattis finibus. Proin laoreet ac ipsum ac bibendum. Proin et congue leo. In hac habitasse platea dictumst. Duis consequat tincidunt ultrices. Etiam imperdiet congue ante in tempor. Duis vel elementum dolor. Vivamus non tortor erat. Sed fringilla elit urna, sed volutpat dui malesuada eget. Praesent vulputate sapien at sem ornare, sit amet placerat enim ultrices. Sed hendrerit sapien eget mi ullamcorper luctus. Ut ut lorem est. In maximus id ligula a fringilla. Mauris aliquam id sapien sit amet pretium. Fusce sed tristique dui. Maecenas volutpat nisl ex, sed pellentesque felis dapibus nec. Vestibulum eget suscipit elit. Aliquam metus neque, semper a ullamcorper a, finibus vitae diam. Pellentesque in hendrerit lectus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec rhoncus nulla.",
+  "servings": "4 Servings",
+  "originalUrl": "https://example.com/",
+  "prepTime": 20,
+  "cookTime": 15,
+  "restTime": 0,
+  "note": "Morbi pretium tortor non viverra rutrum. Etiam gravida facilisis nisi sit amet tempus. Fusce facilisis, nulla vel fermentum malesuada, ipsum eros tempor metus, id blandit ipsum orci sed est. Donec ut aliquet ex, et sagittis neque. Pellentesque finibus condimentum magna, non ultricies mi cursus sed. Aenean volutpat, elit a elementum consectetur, lorem dui porttitor tortor, in vehicula turpis velit rhoncus libero. Mauris mollis eros ac odio lobortis, in aliquam nulla consectetur. Duis condimentum, magna eget tincidunt scelerisque, erat ipsum volutpat ligula, quis mollis lorem neque eget dui. Cras facilisis sit amet dui vitae ultricies. Pellentesque non dapibus augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vivamus lorem libero, aliquam quis erat quis, tempus interdum magna. Fusce lacinia, felis ac malesuada convallis, augue urna dictum nisl, ut malesuada diam felis in diam. Donec ut nibh eros. Ut quam nibh, tempus vestibulum semper eleifend, bibendum vel lectus. Nullam facilisis ultrices tempus."
+}
+
+### update recipe
+PUT http://localhost:8000/recipe/0192a1dc-6cad-78cb-8257-ade053a25177
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+{
+  "title": "updated title",
+  "description": "title is cool",
+  "ingredients": [
+    {
+      "id": "0192a1e0-54f9-7471-861b-baced1812a84",
+      "notes": "THIS SHOULD BE ONE",
+      "heading": false
+    }
+  ]
+}
+
+
+### Simple get recipe
+GET http://localhost:8000/recipe/{{target_recipe}}/full
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+### Simple get full recipe
+GET http://localhost:8000/recipe/{{target_recipe}}/full
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+### Add step to recipe
+POST http://localhost:8000/recipe/{{target_recipe}}/step
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+{
+  "description": "Step 6"
+}
+
+### Add ingredient to recipe
+POST http://localhost:8000/recipe/{{target_recipe}}/ingredient
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+{
+  "notes": "Ingredient 8"
+}
+
+### Update ingredientDTOS in recipe
+PUT http://localhost:8000/recipe/{{target_recipe}}/ingredientDTOS
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+[
+  {
+    "id": "de50050e-929c-4ae4-ffff-8120c5f8d98d",
+    "title": "put2 UPDATED"
+  }
+]
+
+### Add ingredient to step
+POST http://localhost:8000/recipe/{{target_recipe}}/step/0192d53a-dc57-7103-9868-9361b60ae1b6/ingredient
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("oidc")}}
+
+{
+  "ingredientId": "0192d53b-481d-74e9-bfc4-6f296d27f33c"
+}
+
+
+
+### import a recipe from a url
+POST http://localhost:8000/import/url?uri=https://www.justonecookbook.com/homemade-miso-soup/
+Authorization: Bearer {{$auth.token("oidc")}}
+Accept: application/json

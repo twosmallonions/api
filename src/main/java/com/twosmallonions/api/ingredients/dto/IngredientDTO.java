@@ -1,5 +1,8 @@
 package com.twosmallonions.api.ingredients.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -7,17 +10,23 @@ import java.util.UUID;
 
 @Data
 public class IngredientDTO implements Serializable {
-    UUID id;
-    String title;
-    Boolean heading;
+    @NotBlank
+    private String id;
+    @NotBlank
+    private String notes;
+    private Boolean heading = false;
 
-    String parsed_ingredient;
+    private String parsedIngredient;
 
-    double parsed_original_amount;
-    String parsed_original_unit;
-    String original_measurement_system;
+    private double parsedOriginalAmount;
+    private String parsedOriginalUnit;
+    private String originalMeasurementSystem;
 
-    double parsed_converted_amount;
-    String parsed_converted_unit;
-    String converted_measurement_system;
+    private double parsedConvertedAmount;
+    private String parsedConvertedUnit;
+    private String convertedMeasurementSystem;
+    @JsonIgnore
+    private int orderIdx;
+
+
 }
