@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.hibernate.validator.constraints.URL;
 
 import java.time.ZonedDateTime;
 
@@ -18,5 +19,6 @@ public class CreateRecipeDTO {
     private int cookTime;
     private int restTime;
     private String note;
+    @URL
     private String image;
 }

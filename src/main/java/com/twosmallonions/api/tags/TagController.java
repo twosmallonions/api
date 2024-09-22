@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/tag")
@@ -33,7 +34,7 @@ public class TagController {
     }
 
     @PutMapping("/{id}")
-    public TagDTO updateTag(final JwtAuthenticationToken jwt, @PathVariable int id, @Valid @RequestBody CreateTagDTO createTagDTO) {
+    public TagDTO updateTag(final JwtAuthenticationToken jwt, @PathVariable UUID id, @Valid @RequestBody CreateTagDTO createTagDTO) {
         var subject = (String) jwt.getTokenAttributes().get("sub");
 
         var tag = this.tagService.updateTag(id, createTagDTO, subject);

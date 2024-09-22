@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+http-client.private.env.json
+http_requests/resources/
+docker/.docker.dev.env

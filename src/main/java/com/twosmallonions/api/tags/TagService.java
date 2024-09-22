@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,16 +22,20 @@ public class TagService {
         return this.tagRepository.findBySubject(subject);
     }
 
-    public Tag updateTag(long tagId, CreateTagDTO createTagDTO, String subject) {
-        var optionalTag = this.tagRepository.findBySubjectAndId(subject, tagId);
-        if (optionalTag.isEmpty()) {
-            throw new ResourceNotFoundException();
-        }
-
-        var tag = optionalTag.get();
+    public Tag updateTag(UUID id, CreateTagDTO createTagDTO, String subject) {
+        var tag = this.getTag(id, subject);
 
         this.tagMapper.updateTagFromCreateTagDTO(tag, createTagDTO);
 
         return this.tagRepository.save(tag);
+    }
+
+    public Tag getTag(UUID id, String subject) {
+        var optionalTag = this.tagRepository.findByUuidAndSubject(id, subject);
+        if (optionalTag.isEmpty()) {
+            throw new ResourceNotFoundException("Failed to find tag with id " + id);
+        }
+
+       return optionalTag.get();
     }
 }

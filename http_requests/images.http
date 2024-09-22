@@ -1,0 +1,12 @@
+### GET request to example server
+POST {{base_url}}/upload/recipe/{{target_recipe}}
+Content-Type: multipart/form-data; boundary=ContentBoundary
+Authorization: Bearer {{$auth.token("oidc")}}
+
+--ContentBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+Content-Type: image/jpeg
+
+< image.jpg
+--ContentBoundary--
+

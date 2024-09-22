@@ -1,0 +1,14 @@
+tso:
+  upload:
+    endpoint: "https://test.com"
+    user-image-bucket: "test"
+    aws-access-key: "..."
+    aws-secret-key: "..."
+    imgproxy-base-url: http://127.0.0.1:8081
+    region: auto
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dummy-issuer

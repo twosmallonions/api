@@ -1,0 +1,28 @@
+package com.twosmallonions.api.recipeimport;
+
+import com.twosmallonions.api.recipe.RecipeMapper;
+import com.twosmallonions.api.recipe.dto.RecipeDTO;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URI;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/import")
+public class RecipeImportController {
+    private final RecipeImportService importService;
+    private final RecipeMapper recipeMapper;
+    @PostMapping("/url")
+    public ResponseEntity<RecipeDTO> importRecipeFromUrl(@RequestParam URI uri, JwtAuthenticationToken jwt) {
+        var subject = (String) jwt.getTokenAttributes().get("sub");
+
+        var recipe = this.importService.importRecipeFromUrl(uri, subject);
+        return ResponseEntity.ok(this.recipeMapper.recipeToRecipeDTO(recipe));
+    }
+}
