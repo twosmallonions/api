@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Marius Meschter
+      changes:
+        - sqlFile:
+            path: changesets/001_initial.sql
+            relativeToChangelogFile: true
+            stripComments: true
+  - changeSet:
+      id: 2
+      author: Marius Meschter
+      changes:
+        - addDefaultValue:
+            tableName: recipe
+            columnName: modified
+            defaultValueComputed: current_timestamp
+  - changeSet:
+      id: 3
+      author: Marius Meschter
+      changes:
+        - sqlFile:
+            path: changesets/003_ingredients_steps.sql
+            relativeToChangelogFile: true
+            stripComments: true
+  - changeSet:
+      id: 4
+      author: Marius Meschter
+      changes:
+        - sqlFile:
+            path: changesets/004_user_tags.sql
+            relativeToChangelogFile: true
+            stripComments: true
