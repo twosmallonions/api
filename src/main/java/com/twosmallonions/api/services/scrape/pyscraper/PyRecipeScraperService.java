@@ -1,63 +1,51 @@
 package com.twosmallonions.api.services.scrape.pyscraper;
 
+import com.twosmallonions.api.ScrapeRequest;
+import com.twosmallonions.api.ScraperServiceGrpc;
 import com.twosmallonions.api.recipe.Recipe;
 import com.twosmallonions.api.services.scrape.RecipeScraper;
-import com.twosmallonions.api.services.scrape.pyscraper.response.RecipeScraperResponse;
+import io.grpc.Grpc;
+import io.grpc.ManagedChannel;
+import io.grpc.TlsChannelCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 
 @Service
 public class PyRecipeScraperService implements RecipeScraper {
-    private final RestClient restClient;
-    @Value("${tso.scraper.py.uri}")
-    private URI scraperBaseUri;
-    @Value("${tso.scraper.py.secret}")
-    private String scraperSecret;
 
-    public PyRecipeScraperService(RestClient.Builder clientBuilder) {
-        this.restClient = clientBuilder.build();
+    private final ScraperServiceGrpc.ScraperServiceBlockingStub blockingStub;
+    private static final Logger logger = LoggerFactory.getLogger(PyRecipeScraperService.class);
+
+    PyRecipeScraperService(
+            @Value("${tso.scraper.py.client-certificate}") String clientCertificate,
+            @Value("${tso.scraper.py.client-key}") String clientKey,
+            @Value("${tso.scraper.py.root-ca}") String rootCA,
+            @Value("${tso.scraper.py.host}") String host,
+            @Value("${tso.scraper.py.port}") int port
+    ) throws IOException {
+        var tls = TlsChannelCredentials
+                .newBuilder()
+                .keyManager(new File(clientCertificate), new File(clientKey))
+                .trustManager(new File(rootCA))
+                .build();
+        var channel = Grpc.newChannelBuilderForAddress(host, port, tls).build();
+        this.blockingStub = ScraperServiceGrpc.newBlockingStub(channel);
     }
 
     @Override
-    public String getHtml(URI uri) {
-        var req = this.createRequest(uri, true);
-        return req
-                .retrieve()
-                .body(String.class);
-    }
+    public Recipe parse(URI url) {
+        var request = ScrapeRequest.newBuilder().setUrl(url.toString()).build();
 
-    @Override
-    public Recipe parse(URI uri) {
-        var req = this.createRequest(uri, false);
-        return req
-                .retrieve()
-                .body(RecipeScraperResponse.class)
-                .toRecipe();
-    }
+        var response = this.blockingStub.scrape(request);
+        logger.info(response.toString());
 
-    private RestClient.RequestHeadersSpec<?> createRequest(URI uri, boolean raw) {
-        var scraperRequestUri = UriComponentsBuilder.fromUri(this.scraperBaseUri)
-                .pathSegment("scrape")
-                .queryParam("url", uri)
-                .queryParam("raw", raw)
-                .toUriString();
+        return null;
 
-        var req = this.restClient
-                .get()
-                .uri(scraperRequestUri)
-                .header("Authorization", "Bearer " + this.scraperSecret);
-
-        if (raw)
-            req.accept(MediaType.TEXT_PLAIN);
-        else
-            req.accept(MediaType.APPLICATION_JSON);
-
-        return req;
     }
 }

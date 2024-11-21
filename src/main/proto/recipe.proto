@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.twosmallonions.api";
+option java_outer_classname = "ScraperServiceProto";
+
+package tso_scraper;
+
+service ScraperService {
+  rpc Scrape(ScrapeRequest) returns (ScrapeResponse);
+}
+
+message ScrapeRequest {
+  string url = 1;
+}
+
+
+message ScrapeResponse {
+  message IngredientGroup {
+    repeated string ingredients = 18;
+    string purpose = 19;
+  }
+  optional string author = 1;
+  optional string canonical_url = 2;
+  optional string category = 3;
+  optional uint32 cook_time = 4;
+  optional string description = 5;
+  optional string image = 6;
+  repeated string ingredients = 7;
+  optional string instructions = 8;
+  repeated string instructions_list = 9;
+  repeated string keywords = 10;
+  optional string language = 11;
+  optional uint32 prep_time = 12;
+  optional string title = 13;
+  optional uint32 total_time = 14;
+  optional string cuisine = 15;
+  optional string host = 16;
+  repeated IngredientGroup ingredient_groups = 17;
+}
