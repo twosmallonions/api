@@ -12,6 +12,9 @@ import java.net.URI;
 @Configuration
 @ConfigurationProperties(prefix = "tso.scraper.py")
 public class PyRecipeScraperProperties {
-    private URI uri;
-    private String secret;
+    private String host;
+    private int port;
+    private String clientCertificate;
+    private String clientKey;
+    private String rootCa;
 }

@@ -45,8 +45,11 @@ tso:
     region: auto
   scraper:
     py:
-      uri: http://127.0.0.1:8001
-      secret: insecure
+      host: 127.0.0.1
+      port: 50051
+      client-certificate: ""
+      client-key: ""
+      root-ca: ""
 
 management:
   server:

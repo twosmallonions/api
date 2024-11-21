@@ -22,7 +22,11 @@ public class RecipeImportController {
     public ResponseEntity<RecipeDTO> importRecipeFromUrl(@RequestParam URI uri, JwtAuthenticationToken jwt) {
         var subject = (String) jwt.getTokenAttributes().get("sub");
 
-        var recipe = this.importService.importRecipeFromUrl(uri, subject);
-        return ResponseEntity.ok(this.recipeMapper.recipeToRecipeDTO(recipe));
+        try {
+            var recipe = this.importService.importRecipeFromUrl(uri, subject);
+            return ResponseEntity.ok(this.recipeMapper.recipeToRecipeDTO(recipe));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

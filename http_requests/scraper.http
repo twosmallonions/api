@@ -1,0 +1,3 @@
+### GET request to example server
+GRPC grpcs://localhost:50051/
+###
