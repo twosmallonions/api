@@ -87,3 +87,8 @@ Authorization: Bearer {{$auth.token("oidc")}}
 POST http://localhost:8000/import/url?uri=https://www.justonecookbook.com/homemade-miso-soup/
 Authorization: Bearer {{$auth.token("oidc")}}
 Accept: application/json
+
+### get all recipes
+GET http://localhost:8000/recipe
+Authorization: Bearer {{$auth.token("oidc")}}
+Accept: application/json

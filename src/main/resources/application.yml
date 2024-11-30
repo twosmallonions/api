@@ -50,6 +50,7 @@ tso:
       client-certificate: ""
       client-key: ""
       root-ca: ""
+      enabled: false
 
 management:
   server:

@@ -2,6 +2,7 @@ package com.twosmallonions.api;
 
 import com.twosmallonions.api.exceptions.ErrorResponse;
 import com.twosmallonions.api.exceptions.ResourceNotFoundException;
+import com.twosmallonions.api.exceptions.ScraperConfigurationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -17,7 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice(basePackages = "com.twosmallonions.api")
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ResponseBody
-    @ExceptionHandler(value = {ResourceNotFoundException.class})
+    @ExceptionHandler(value = {ResourceNotFoundException.class, ScraperConfigurationException.class})
     protected ResponseEntity<ErrorResponse> handleException(HttpServletRequest httpRequest, ResourceNotFoundException ex) {
         var resp = ErrorResponse.builder()
                 .status(HttpStatus.NOT_FOUND.value())

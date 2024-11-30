@@ -17,4 +17,5 @@ public class PyRecipeScraperProperties {
     private String clientCertificate;
     private String clientKey;
     private String rootCa;
+    private boolean enabled;
 }

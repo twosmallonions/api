@@ -10,6 +10,7 @@ import io.grpc.TlsChannelCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.net.URI;
 
 @Service
+@ConditionalOnProperty(name = "tso.scraper.py.enabled", havingValue = "true")
 public class PyRecipeScraperService implements RecipeScraper {
 
     private final ScraperServiceGrpc.ScraperServiceBlockingStub blockingStub;
