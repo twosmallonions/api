@@ -9,6 +9,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.URL;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -25,6 +26,6 @@ public class CreateRecipeDTO {
     @URL
     private String image;
 
-    private List<CreateIngredientDTO> ingredients;
-    private List<CreateStepDTO> steps;
+    private List<CreateIngredientDTO> ingredients = new ArrayList<>();
+    private List<CreateStepDTO> steps = new ArrayList<>();
 }
