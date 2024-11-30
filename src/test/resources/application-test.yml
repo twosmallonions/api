@@ -6,6 +6,9 @@ tso:
     aws-secret-key: "..."
     imgproxy-base-url: http://127.0.0.1:8081
     region: auto
+  scraper:
+    py:
+      enabled: false
 spring:
   security:
     oauth2:
