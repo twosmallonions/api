@@ -47,10 +47,10 @@ tso:
     py:
       host: 127.0.0.1
       port: 50051
-      client-certificate: ""
-      client-key: ""
-      root-ca: ""
-      enabled: false
+      client-certificate: ${SCRAPER_CLIENT_CERT}
+      client-key: ${SCRAPER_CLIENT_CERT_KEY}
+      root-ca: ${SCRAPER_ROOT_CA}
+      enabled: true
 
 management:
   server:

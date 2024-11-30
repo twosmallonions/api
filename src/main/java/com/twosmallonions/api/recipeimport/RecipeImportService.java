@@ -1,7 +1,9 @@
 package com.twosmallonions.api.recipeimport;
 
 import com.twosmallonions.api.recipe.Recipe;
+import com.twosmallonions.api.recipe.RecipeMapper;
 import com.twosmallonions.api.recipe.RecipeRepository;
+import com.twosmallonions.api.recipe.RecipeService;
 import com.twosmallonions.api.services.scrape.RecipeScraperFactory;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -9,20 +11,20 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
+import java.net.URL;
 
 @Service
 @RequiredArgsConstructor
 public class RecipeImportService {
     private final RecipeScraperFactory recipeScraperFactory;
-    private final RecipeRepository recipeRepository;
+    private final RecipeMapper recipeMapper;
+    private final RecipeService recipeService;
 
-    public Recipe importRecipeFromUrl(URI uri, String subject) {
+    public Recipe importRecipeFromUrl(URL uri, String subject) {
         var scraper = recipeScraperFactory.getRecipeScraper();
-        var recipe = scraper.parse(uri);
-        recipe.setSubject(subject);
-        // FIXME
-        recipe.setSlug(RandomStringUtils.randomAlphanumeric(9));
+        var createRecipeDTO = scraper.parse(uri);
+        var recipe = this.recipeMapper.createRecipeToRecipe(createRecipeDTO, subject);
 
-        return this.recipeRepository.save(recipe);
+        return this.recipeService.createRecipe(recipe);
     }
 }

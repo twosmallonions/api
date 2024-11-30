@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.net.URL;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,11 +20,11 @@ public class RecipeImportController {
     private final RecipeImportService importService;
     private final RecipeMapper recipeMapper;
     @PostMapping("/url")
-    public ResponseEntity<RecipeDTO> importRecipeFromUrl(@RequestParam URI uri, JwtAuthenticationToken jwt) {
+    public ResponseEntity<RecipeDTO> importRecipeFromUrl(@RequestParam URL url, JwtAuthenticationToken jwt) {
         var subject = (String) jwt.getTokenAttributes().get("sub");
 
         try {
-            var recipe = this.importService.importRecipeFromUrl(uri, subject);
+            var recipe = this.importService.importRecipeFromUrl(url, subject);
             return ResponseEntity.ok(this.recipeMapper.recipeToRecipeDTO(recipe));
         } catch (Exception e) {
             throw new RuntimeException(e);

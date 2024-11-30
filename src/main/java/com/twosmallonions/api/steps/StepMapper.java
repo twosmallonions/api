@@ -16,6 +16,7 @@ import java.util.List;
 public interface StepMapper {
     StepMapper INSTANCE = Mappers.getMapper(StepMapper.class);
 
+    @Mapping(target = "id", ignore = true)
     Step createStepDTOToStep(CreateStepDTO createStepDTO, int order_idx);
     @Mapping(target = "ingredientId", source = "ingredient.id")
     StepIngredientDTO stepIngredientToStepIngredientDTO(StepIngredient stepIngredient);

@@ -11,7 +11,17 @@ Authorization: Bearer {{$auth.token("oidc")}}
   "prepTime": 20,
   "cookTime": 15,
   "restTime": 0,
-  "note": "Morbi pretium tortor non viverra rutrum. Etiam gravida facilisis nisi sit amet tempus. Fusce facilisis, nulla vel fermentum malesuada, ipsum eros tempor metus, id blandit ipsum orci sed est. Donec ut aliquet ex, et sagittis neque. Pellentesque finibus condimentum magna, non ultricies mi cursus sed. Aenean volutpat, elit a elementum consectetur, lorem dui porttitor tortor, in vehicula turpis velit rhoncus libero. Mauris mollis eros ac odio lobortis, in aliquam nulla consectetur. Duis condimentum, magna eget tincidunt scelerisque, erat ipsum volutpat ligula, quis mollis lorem neque eget dui. Cras facilisis sit amet dui vitae ultricies. Pellentesque non dapibus augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vivamus lorem libero, aliquam quis erat quis, tempus interdum magna. Fusce lacinia, felis ac malesuada convallis, augue urna dictum nisl, ut malesuada diam felis in diam. Donec ut nibh eros. Ut quam nibh, tempus vestibulum semper eleifend, bibendum vel lectus. Nullam facilisis ultrices tempus."
+  "note": "Morbi pretium tortor non viverra rutrum. Etiam gravida facilisis nisi sit amet tempus. Fusce facilisis, nulla vel fermentum malesuada, ipsum eros tempor metus, id blandit ipsum orci sed est. Donec ut aliquet ex, et sagittis neque. Pellentesque finibus condimentum magna, non ultricies mi cursus sed. Aenean volutpat, elit a elementum consectetur, lorem dui porttitor tortor, in vehicula turpis velit rhoncus libero. Mauris mollis eros ac odio lobortis, in aliquam nulla consectetur. Duis condimentum, magna eget tincidunt scelerisque, erat ipsum volutpat ligula, quis mollis lorem neque eget dui. Cras facilisis sit amet dui vitae ultricies. Pellentesque non dapibus augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vivamus lorem libero, aliquam quis erat quis, tempus interdum magna. Fusce lacinia, felis ac malesuada convallis, augue urna dictum nisl, ut malesuada diam felis in diam. Donec ut nibh eros. Ut quam nibh, tempus vestibulum semper eleifend, bibendum vel lectus. Nullam facilisis ultrices tempus.",
+  "ingredients": [
+    {
+      "notes": "Test"
+    }
+  ],
+  "steps": [
+    {
+      "description": "Test Step"
+    }
+  ]
 }
 
 ### update recipe
@@ -73,18 +83,18 @@ Authorization: Bearer {{$auth.token("oidc")}}
 ]
 
 ### Add ingredient to step
-POST http://localhost:8000/recipe/{{target_recipe}}/step/0192d53a-dc57-7103-9868-9361b60ae1b6/ingredient
+POST http://localhost:8000/recipe/{{target_recipe}}/step/01937cdb-266a-7e81-ab61-9eb675f8f76b/ingredient
 Content-Type: application/json
 Authorization: Bearer {{$auth.token("oidc")}}
 
 {
-  "ingredientId": "0192d53b-481d-74e9-bfc4-6f296d27f33c"
+  "ingredientId": "01937cdb-2667-7968-8426-440b49081b7f"
 }
 
 
 
 ### import a recipe from a url
-POST http://localhost:8000/import/url?uri=https://www.justonecookbook.com/homemade-miso-soup/
+POST http://localhost:8000/import/url?url=https://www.justonecookbook.com/homemade-miso-soup/
 Authorization: Bearer {{$auth.token("oidc")}}
 Accept: application/json
 

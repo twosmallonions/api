@@ -5,9 +5,6 @@ services:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - KEYCLOAK_DB_NAME=${KEYCLOAK_DB_NAME}
-      - KEYCLOAK_DB_USERNAME=${KEYCLOAK_DB_USERNAME}
-      - KEYCLOAK_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./01_pg_init.sh:/docker-entrypoint-initdb.d/01_pg_init.sh
@@ -17,22 +14,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 80s
-  minio:
-    image: quay.io/minio/minio
-    volumes:
-      - minio_data:/data
-    ports:
-      - 9000:9000
-      - 9001:9001
-    command: server /data --console-address ":9001"
-    environment:
-      - MINIO_IDENTITY_OPENID_CONFIG_URL=${MINIO_IDENTITY_OPENID_CONFIG_URL}
-      - MINIO_IDENTITY_OPENID_CLIENT_ID=${MINIO_IDENTITY_OPENID_CLIENT_ID}
-      - MINIO_IDENTITY_OPENID_CLIENT_SECRET=${MINIO_IDENTITY_OPENID_CLIENT_SECRET}
-      - MINIO_IDENTITY_OPENID_CLAIM_NAME=${MINIO_IDENTITY_OPENID_CLAIM_NAME}
-      - MINIO_IDENTITY_OPENID_SCOPES=${MINIO_IDENTITY_OPENID_SCOPES}
-      - MINIO_BROWSER_REDIRECT_URL=${MINIO_BROWSER_REDIRECT_URL}
-      - MINIO_IDENTITY_OPENID_COMMENT=${MINIO_IDENTITY_OPENID_COMMENT}
   imgproxy:
     image: darthsim/imgproxy:latest
     ports:
@@ -44,8 +25,6 @@ services:
       - IMGPROXY_S3_ENDPOINT=https://f684aa8be0e21c565c4c3e9ea2150d7c.r2.cloudflarestorage.com/tso-dev
       - IMGPROXY_LOG_LEVEL=debug
       - IMGPROXY_S3_REGION=auto
-    depends_on:
-      - minio
   auth_cache:
     image: valkey/valkey:8-bookworm
     ports:
@@ -54,10 +33,24 @@ services:
       - auth_cache_data:/data
   scraper_cache:
     image: valkey/valkey:8-bookworm
-    ports:
-      - 6380:6379
     volumes:
       - scrape_cache_data:/data
+    ports:
+      - 6380:6379
+  #scraper:
+  #  build: './../../tso-scraper'
+  #  environment:
+  #    - SCRAPER_SERVER_CERT=${SCRAPER_SERVER_CERT}
+  #    - SCRAPER_SERVER_CERT_KEY=${SCRAPER_SERVER_CERT_KEY}
+  #    - SCRAPER_CA_CERT=${SCRAPER_CA_CERT}
+  #    - SCRAPER_REDIS_HOST=scraper_cache
+  #    - SCRAPER_REDIS_PORT=6379
+  #  volumes:
+  #    - ./../../tso-scraper/dev_credentials:/dev_credentials
+  #  depends_on:
+  #    - scraper_cache
+  #  ports:
+  #    - '50051:50051'
   bff:
     build: './../../bff'
     environment:

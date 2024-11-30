@@ -1,9 +1,11 @@
 package com.twosmallonions.api.services.scrape;
 
 import com.twosmallonions.api.recipe.Recipe;
+import com.twosmallonions.api.recipe.dto.CreateRecipeDTO;
 
 import java.net.URI;
+import java.net.URL;
 
 public interface RecipeScraper {
-    Recipe parse(URI uri);
+    CreateRecipeDTO parse(URL uri);
 }
