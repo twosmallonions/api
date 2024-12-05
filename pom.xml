@@ -40,7 +40,7 @@
     <properties>
         <java.version>21</java.version>
         <org.mapstruct.version>1.6.0</org.mapstruct.version>
-        <aws.java.sdk.version>2.28.14</aws.java.sdk.version>
+        <aws.java.sdk.version>2.29.29</aws.java.sdk.version>
     </properties>
     <dependencyManagement>
         <dependencies>
