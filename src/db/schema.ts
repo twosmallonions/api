@@ -3,12 +3,12 @@ import {v7} from "uuid";
 
 export const recipes = p.pgTable('recipes', {
     id: p.uuid().$default(() => v7()).primaryKey(),
-    user: p.uuid(),
+    user: p.uuid().notNull(),
     title: p.varchar().notNull(),
     slug: p.varchar().notNull(),
     description: p.varchar(),
-    created_at: p.timestamp({withTimezone: true}).defaultNow(),
-    updated_at: p.timestamp({withTimezone: true}).defaultNow().$onUpdate(() => new Date())
+    created_at: p.timestamp({withTimezone: true}).defaultNow().notNull(),
+    updated_at: p.timestamp({withTimezone: true}).defaultNow().$onUpdate(() => new Date()).notNull()
 }, (table) => [
     p.index('slug_idx').on(table.slug),
     p.unique().on(table.slug, table.user)
