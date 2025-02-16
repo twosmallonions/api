@@ -1,13 +1,16 @@
-export interface FullRecipe {
-    id: string
-    title: string
-    slug: string
-    description: string | null
-    created_at: Date
-    updated_at: Date
-    instructions: RecipeInstruction[]
-}
+import { z } from 'zod';
+export const RecipeInstructionSchema = z.object({
+    text: z.string(),
+});
 
-export interface RecipeInstruction {
-    text: string
-}
+export const FullRecipeSchema = z.object({
+    title: z.string(),
+    slug: z.string(),
+    description: z.string().nullable(),
+    created_at: z.date(),
+    updated_at: z.date(),
+    instructions: z.array(RecipeInstructionSchema),
+});
+
+export type FullRecipe = z.infer<typeof FullRecipeSchema>;
+export type RecipeInstruction = z.infer<typeof RecipeInstructionSchema>;

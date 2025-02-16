@@ -8,12 +8,12 @@ CREATE TABLE "instructions" (
 --> statement-breakpoint
 CREATE TABLE "recipes" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"user" uuid,
+	"user" varchar NOT NULL,
 	"title" varchar NOT NULL,
 	"slug" varchar NOT NULL,
 	"description" varchar,
-	"created_at" timestamp with time zone DEFAULT now(),
-	"updated_at" timestamp with time zone DEFAULT now(),
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "recipes_slug_user_unique" UNIQUE("slug","user")
 );
 --> statement-breakpoint
