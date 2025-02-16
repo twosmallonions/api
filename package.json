@@ -14,13 +14,12 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "class-transformer": "^0.5.1",
         "drizzle-orm": "^0.39.3",
         "express": "^5.0.1",
         "express-jwt": "^8.5.1",
         "jwks-rsa": "^3.1.0",
+        "kysely": "^0.27.5",
         "pg": "^8.13.3",
-        "reflect-metadata": "^0.2.2",
         "uuid": "^11.0.5",
         "zod": "^3.24.2"
     },
@@ -38,6 +37,7 @@
         "eslint-import-resolver-typescript": "^3.8.0",
         "eslint-plugin-import": "^2.31.0",
         "globals": "^15.15.0",
+        "kysely-codegen": "^0.17.0",
         "prettier": "3.5.1",
         "randomstring": "^1.3.1",
         "testcontainers": "^10.18.0",
@@ -52,6 +52,5 @@
             "esbuild",
             "ssh2"
         ]
-    },
-    "type": "module"
+    }
 }

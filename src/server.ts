@@ -6,7 +6,6 @@ import { v4 } from 'uuid';
 import { getDb } from './db/db.js';
 import { RecipeService } from './services/RecipeService.js';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import 'reflect-metadata';
 
 const app = express();
 
