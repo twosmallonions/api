@@ -1,0 +1,28 @@
+[project]
+name = "tso_api"
+version = "0.1.0"
+description = "TSO API"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.115.8",
+    "psycopg[c,pool]>=3.2.4",
+    "pydantic>=2.10.6",
+    "uuid6>=2024.7.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib"
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.3",
+    "testcontainers[postgres]>=4.9.1",
+]
