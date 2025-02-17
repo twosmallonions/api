@@ -1,13 +1,10 @@
 import os
 import subprocess
-from turtle import pos
 from typing import Generator
 from psycopg_pool import AsyncConnectionPool
 import pytest
 import pytest_asyncio
 from testcontainers.postgres import PostgresContainer # type: ignore
-from tso_api.repository.recipe_repository import RecipeRepository
-from tso_api.routers.recipe import RecipeCreate
 
 postgres = PostgresContainer("postgres:17")
 
@@ -20,9 +17,8 @@ def setup_db() -> Generator[str, None, None]:
     yield db_url
     postgres.stop()
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(loop_scope="session", scope="session") # type: ignore
 async def db_pool(setup_db: str):
-    print(f'connecting to db at {setup_db}')
     db_pool = AsyncConnectionPool(setup_db, open=False)
     await db_pool.open(wait=True, timeout=5)
     yield db_pool
