@@ -1,25 +1,37 @@
 import os
+import shutil
 import subprocess
-from typing import Generator
-from psycopg_pool import AsyncConnectionPool
+from collections.abc import Generator
+
 import pytest
-import pytest_asyncio
-from testcontainers.postgres import PostgresContainer # type: ignore
+from psycopg_pool import AsyncConnectionPool
+from testcontainers.postgres import PostgresContainer  # pyright: ignore[reportMissingTypeStubs]
 
-postgres = PostgresContainer("postgres:17")
+postgres = PostgresContainer('postgres:17')
 
-@pytest.fixture(scope="session")
-def setup_db() -> Generator[str, None, None]:
-    postgres.start()
-    db_url = f"postgresql://{postgres.username}:{postgres.password}@{postgres.get_container_host_ip()}:{postgres.get_exposed_port(5432)}/{postgres.dbname}?sslmode=disable" 
+
+@pytest.fixture(scope='package')
+def setup_db() -> Generator[str]:
+    _ = postgres.start()
+    db_url = f'postgresql://{postgres.username}:{postgres.password}@{postgres.get_container_host_ip()}:{postgres.get_exposed_port(5432)}/{postgres.dbname}?sslmode=disable'
     os.environ['DATABASE_URL'] = db_url
-    subprocess.run(["dbmate", "up"], check=True)
+    dbmate_path = shutil.which('dbmate')
+    if dbmate_path is None:
+        raise Exception("dbmate not found")
+    _ = subprocess.run([dbmate_path, 'up'], check=True)
     yield db_url
     postgres.stop()
 
-@pytest_asyncio.fixture(loop_scope="session", scope="session") # type: ignore
+
+@pytest.fixture(scope='package')  # pyright: ignore[reportUnknownMemberType, reportUntypedFunctionDecorator]
 async def db_pool(setup_db: str):
     db_pool = AsyncConnectionPool(setup_db, open=False)
     await db_pool.open(wait=True, timeout=5)
     yield db_pool
     await db_pool.close()
+
+
+@pytest.fixture
+async def conn(db_pool: AsyncConnectionPool):
+    async with db_pool.connection() as conn:
+        yield conn

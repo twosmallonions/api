@@ -1,3 +1,4 @@
+#:schema https://json.schemastore.org/pyproject.json
 [project]
 name = "tso_api"
 version = "0.1.0"
@@ -17,12 +18,76 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 addopts = [
-    "--import-mode=importlib"
+    "--import-mode=importlib",
+    "--continue-on-collection-errors"
 ]
+asyncio_default_fixture_loop_scope = "package"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 120
+required-version = ">=0.9.6"
+src = ["src", "test"]
+
+[tool.ruff.format]
+quote-style = "single"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+preview = true
+select = ["ALL"]
+ignore = [
+  # conflict with formatter
+  "W191",
+  "E111",
+  "E114",
+  "E117",
+  "D206",
+  "D300",
+  "Q000",
+  "Q001",
+  "Q002",
+  "Q003",
+  "COM812",
+  "COM819",
+  "ISC002",
+  "E501",
+  "D203",
+  "D212",
+  # maybe use these at some point
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D106",
+  "D107",
+  "CPY001",
+  "S404",
+  "S603",
+  "ANN201"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "TRY002", "TRY003", "EM101"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+split-on-trailing-comma = false
+
+[tool.ruff.lint.mccabe]
+max-complexity = 50
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.3",
+    "ruff>=0.9.6",
     "testcontainers[postgres]>=4.9.1",
 ]
+
+[tool.basedpyright]
+include = ["src", "test"]
+pythonVersion = "3.13"
+allowedUntypedLibraries = ["testcontainers.postgres"]
