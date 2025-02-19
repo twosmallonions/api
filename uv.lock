@@ -595,7 +595,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.115.8" },
+    { name = "fastapi", extras = ["standard"], specifier = "==0.115.8" },
     { name = "psycopg", extras = ["c", "pool"], specifier = ">=3.2.4" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "uuid6", specifier = ">=2024.7.10" },
