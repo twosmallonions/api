@@ -27,6 +27,8 @@ CREATE TABLE instructions (
     UNIQUE (recipe, position) DEFERRABLE INITIALLY DEFERRED
 );
 
+CREATE INDEX ON instructions (recipe);
+
 CREATE TABLE ingredients (
     id uuid PRIMARY KEY,
     text text NOT NULL,
@@ -37,6 +39,22 @@ CREATE TABLE ingredients (
     UNIQUE (recipe, position) DEFERRABLE INITIALLY DEFERRED
 );
 
+CREATE INDEX ON ingredients (recipe);
+
+CREATE VIEW recipes_full AS
+    SELECT
+        r.*,
+        (
+            SELECT ARRAY_AGG(ins.text ORDER BY ins.position)
+            FROM instructions AS ins
+            WHERE ins.recipe = r.id
+        ) AS instructions,
+        (
+            SELECT ARRAY_AGG(ing.text ORDER BY ing.position)
+            FROM ingredients AS ing
+            WHERE ing.recipe = r.id
+        ) AS ingredients
+    FROM recipes r;
 -- migrate:down
 DROP TABLE instructions;
 DROP TABLE recipes;

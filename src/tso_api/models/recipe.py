@@ -1,7 +1,15 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
+
+class Instruction(BaseModel):
+    text: str
+
+
+class Ingredient(BaseModel):
+    text: str
 
 
 class Recipe(BaseModel):
@@ -13,7 +21,8 @@ class Recipe(BaseModel):
 
 
 class RecipeCreate(Recipe):
-    pass
+    instructions: list[str] = []
+    ingredients: list[str] = []
 
 
 class RecipeFull(Recipe):
@@ -24,3 +33,5 @@ class RecipeFull(Recipe):
     updated_at: datetime
     total_time: int | None = None
     last_made: datetime | None
+    instructions: list[str] = []
+    ingredients: list[str] = []

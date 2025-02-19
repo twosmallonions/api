@@ -12,9 +12,13 @@ postgres = PostgresContainer('postgres:17')
 
 @pytest.fixture(scope='package')
 def setup_db() -> Generator[str]:
-    _ = postgres.start()
-    db_url = f'postgresql://{postgres.username}:{postgres.password}@{postgres.get_container_host_ip()}:{postgres.get_exposed_port(5432)}/{postgres.dbname}?sslmode=disable'
-    os.environ['DATABASE_URL'] = db_url
+    db_url = ''
+    if os.environ.get('DATABASE_URL'):
+        db_url = os.environ['DATABASE_URL']
+    else:
+        _ = postgres.start()
+        db_url = f'postgresql://{postgres.username}:{postgres.password}@{postgres.get_container_host_ip()}:{postgres.get_exposed_port(5432)}/{postgres.dbname}?sslmode=disable'
+        os.environ['DATABASE_URL'] = db_url
     dbmate_path = shutil.which('dbmate')
     if dbmate_path is None:
         raise Exception("dbmate not found")
