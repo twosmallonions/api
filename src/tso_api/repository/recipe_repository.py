@@ -3,7 +3,6 @@ from psycopg import AsyncConnection, sql
 from psycopg.rows import dict_row
 
 from tso_api.routers.recipe import RecipeCreate, RecipeFull
-import operator
 
 
 class ResourceNotFoundError(Exception):

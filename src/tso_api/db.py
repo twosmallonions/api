@@ -1,23 +1,12 @@
-import os
 from typing import Annotated
 
 from fastapi import Depends
 from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
+from tso_api.config import settings
 
-class ConfigurationError(Exception):
-    msg: str = 'Missing or invalid configuration: {}'
-
-    def __init__(self, err: str) -> None:
-        super().__init__(self.msg.format(err))
-
-
-def get_db_url():
-    return os.getenv('DATABASE_URL') or ""
-
-
-db_pool = AsyncConnectionPool(get_db_url(), open=False)
+db_pool = AsyncConnectionPool(str(settings.database_url), open=False)
 
 
 async def get_connection():

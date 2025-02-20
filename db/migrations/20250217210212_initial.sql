@@ -42,19 +42,38 @@ CREATE TABLE ingredients (
 CREATE INDEX ON ingredients (recipe);
 
 CREATE VIEW recipes_full AS
-    SELECT
-        r.*,
-        (
-            SELECT ARRAY_AGG(ins.text ORDER BY ins.position)
-            FROM instructions AS ins
-            WHERE ins.recipe = r.id
-        ) AS instructions,
-        (
-            SELECT ARRAY_AGG(ing.text ORDER BY ing.position)
-            FROM ingredients AS ing
-            WHERE ing.recipe = r.id
-        ) AS ingredients
-    FROM recipes r;
+SELECT
+    r.id,
+    r.owner,
+    r.title,
+    r.slug,
+    r.description,
+    r.created_at,
+    r.updated_at,
+    r.cook_time,
+    r.prep_time,
+    r.total_time,
+    r.yield,
+    r.last_made,
+    (
+        SELECT
+            array_agg(
+                ins.text
+                ORDER BY ins.position
+            )
+        FROM instructions AS ins
+        WHERE ins.recipe = r.id
+    ) AS instructions,
+    (
+        SELECT
+            array_agg(
+                ing.text
+                ORDER BY ing.position
+            )
+        FROM ingredients AS ing
+        WHERE ing.recipe = r.id
+    ) AS ingredients
+FROM recipes AS r;
 -- migrate:down
 DROP TABLE instructions;
 DROP TABLE recipes;

@@ -7,9 +7,6 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends libpq-dev gcc python3-dev \
   && rm -rf /var/lib/apt/lists/*
 
-RUN curl -L -o /bin/dbmate https://github.com/amacneil/dbmate/releases/download/v2.25.0/dbmate-linux-amd64 \
-  && chmod +x /bin/dbmate
-
 WORKDIR /app
 
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -32,7 +29,7 @@ RUN apt-get update \
 # renovate: datasource=github-releases depName=amacneil/dbmate versioning=semver
 ENV DBMATE_VERSION=v2.26.0
 
-ADD --chmod=755 https://github.com/amacneil/dbmate/releases/download/${DBMATE_VERSION}}/dbmate-linux-amd64 /bin/dbmate
+ADD --chmod=755 https://github.com/amacneil/dbmate/releases/download/${DBMATE_VERSION}/dbmate-linux-amd64 /bin/dbmate
 
 COPY --from=builder /app /app
 
