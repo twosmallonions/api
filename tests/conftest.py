@@ -5,7 +5,7 @@ from collections.abc import Generator
 
 import pytest
 from psycopg_pool import AsyncConnectionPool
-from testcontainers.postgres import PostgresContainer  # pyright: ignore[reportMissingTypeStubs]
+from testcontainers.postgres import PostgresContainer
 
 postgres = PostgresContainer('postgres:17')
 
@@ -27,7 +27,7 @@ def setup_db() -> Generator[str]:
     postgres.stop()
 
 
-@pytest.fixture(scope='package')  # pyright: ignore[reportUnknownMemberType, reportUntypedFunctionDecorator]
+@pytest.fixture(scope='package')
 async def db_pool(setup_db: str):
     db_pool = AsyncConnectionPool(setup_db, open=False)
     await db_pool.open(wait=True, timeout=5)

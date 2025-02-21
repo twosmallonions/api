@@ -2,7 +2,7 @@ import uuid6
 from psycopg import AsyncConnection, sql
 from psycopg.rows import dict_row
 
-from tso_api.routers.recipe import RecipeCreate, RecipeFull
+from tso_api.models.recipe import RecipeCreate, RecipeFull
 
 
 class ResourceNotFoundError(Exception):
@@ -54,7 +54,7 @@ async def create_recipe(recipe: RecipeCreate, owner: str, conn: AsyncConnection)
 
             _ = await cur.executemany(query, params_instructions)
 
-    return await get_recipe_by_slug(recipe.title.lower(), owner, conn)
+        return await get_recipe_by_slug(recipe.title.lower(), owner, conn)
 
 
 async def get_recipe_by_slug(slug: str, owner: str, conn: AsyncConnection) -> RecipeFull:
