@@ -54,6 +54,7 @@ def resource_not_found_handler(_request: Request, exc: ResourceNotFoundError):
 
 @app.exception_handler(AuthenticationError)
 def authentication_error_handler(_request: Request, exc: AuthenticationError):
+    print(exc)
     www_authenticate_header = f'Bearer realm="tso"'
     if exc.www_authenticate_error:
         www_authenticate_header += f' error="{exc.www_authenticate_error}"'
@@ -63,7 +64,7 @@ def authentication_error_handler(_request: Request, exc: AuthenticationError):
     return Response(status_code=401, headers={'www-authenticate': www_authenticate_header})
 
 
-oidc_auth = OIDCAuth(str(settings.oidc_well_known), ['RS256'])
+oidc_auth = OIDCAuth(str(settings.oidc_well_known), settings.jwt_algorithms)
 user = Annotated[User, Depends(oidc_auth)]
 
 

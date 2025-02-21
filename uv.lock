@@ -1,5 +1,4 @@
 version = 1
-revision = 1
 requires-python = ">=3.13"
 
 [[package]]
@@ -344,6 +343,23 @@ wheels = [
 ]
 
 [[package]]
+name = "opendal"
+version = "0.45.15"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/2d/cde4b858a7e703226220a7c3339bbd8023d1dc8ce0633199ef4fd29e202d/opendal-0.45.15.tar.gz", hash = "sha256:ce7ac10d359a029efb4def31816f665dd02200ec3b076c50c67eabaf67f80117", size = 848798 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/6c/60e47200ee50e472b4cd2e6871cde02b2bf7feca1782f9bd183113b6e0f3/opendal-0.45.15-cp311-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:a7ee0f817bd0f7187dea13d95baf6fb54c51dd676593ccb7b3d0f71270170195", size = 30644979 },
+    { url = "https://files.pythonhosted.org/packages/9e/3b/854fb84e0a81515c2f685f83ad5d1b32454cd57ad14cd40c5266e9102c8d/opendal-0.45.15-cp311-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:f496be9c020557a9651138f141d8e9e87ce4551a7be881b08d449af559737810", size = 15683291 },
+    { url = "https://files.pythonhosted.org/packages/79/7f/9205d26fcd6202d518becb052231a1eda2a66bef4a6cf6b58462b1b08979/opendal-0.45.15-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:df87172a8181805b058c0c2d2468441e9f046ecc3d73d202032536b4f8b883ae", size = 16668322 },
+    { url = "https://files.pythonhosted.org/packages/eb/42/8dcb4ea0eba86f5e4825254756a459b7d59971684d9d108520aee8303ce4/opendal-0.45.15-cp311-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:9c2ba47b733907babf66118e7579c06c561900780fbdb9c5709397ca7e06ac17", size = 16102370 },
+    { url = "https://files.pythonhosted.org/packages/f0/75/fb5653642a03db5176acbe64945475869166511f3185fe4ad9c5dd889d51/opendal-0.45.15-cp311-abi3-win_amd64.whl", hash = "sha256:476b5505f08d346a22a3f603be33499503ff52fab8f43d731c6ec31f6974ad51", size = 15055399 },
+    { url = "https://files.pythonhosted.org/packages/c0/b7/43c47236cbfcf008ac36a7df157533240d46383581cfc4c17361c775d9ca/opendal-0.45.15-cp313-cp313t-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:921a5f917ac44f5965c3fd3d56ab6d2c2df9243cb507780f5f06e6a0f40fdce9", size = 30620185 },
+    { url = "https://files.pythonhosted.org/packages/3c/3e/d583953c870b1d395bfa3e3821e82bd24cbdc3aa81dc67d982eb93fdb739/opendal-0.45.15-cp313-cp313t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:5bac5c3843903c54b929de561821055fab806d49eb055770ba68ef5b88616fae", size = 15690637 },
+    { url = "https://files.pythonhosted.org/packages/25/91/b40c707127263490efb1010fc4a45b8cd02e44708bd3531173c14682909d/opendal-0.45.15-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0fabd759dfafdc04fdefaccd5764d4eb689059b491a6428a8f2528d2fcad8205", size = 16678817 },
+    { url = "https://files.pythonhosted.org/packages/13/77/7d81f19d43850e4837fc5a85ee4c91fb3a544a59954578516529fdecf243/opendal-0.45.15-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:e7ea3955bbd4f3ad93cf270d9ef0cce19d5b0d79d9b37e5fd39ab1cf68ce8b64", size = 16099829 },
+]
+
+[[package]]
 name = "packaging"
 version = "24.2"
 source = { registry = "https://pypi.org/simple" }
@@ -675,6 +691,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "httpx" },
+    { name = "opendal" },
     { name = "psycopg", extra = ["c", "pool"] },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -694,6 +711,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = "==0.115.8" },
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "opendal", specifier = ">=0.45.15" },
     { name = "psycopg", extras = ["c", "pool"], specifier = ">=3.2.4" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
