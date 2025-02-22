@@ -1,10 +1,10 @@
-
 from functools import cached_property
-from typing import Annotated
-from fastapi import Header
+from typing import Annotated, final
+
 import httpx
-from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
 import jwt
+from fastapi import Header
+from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
 from pydantic import BaseModel, HttpUrl
 
 
@@ -12,21 +12,26 @@ class OIDCWellKnown(BaseModel):
     issuer: str
     jwks_uri: HttpUrl
 
+
 class User(BaseModel):
     sub: str
 
 
+@final
 class AuthenticationError(Exception):
     www_authenticate_error: str | None
     error_description: str | None
-    msg = "Authentication failed: {}"
+    msg = 'Authentication failed: {}'
 
     def __init__(self, error_message: str, error: str | None = None, error_description: str | None = None) -> None:
         self.www_authenticate_error = error
         self.error_description = error_description
         super().__init__(self.msg.format(error_message))
 
+
 AUTHORIZATION_HEADER_PARTS = 2
+
+
 class OIDCAuth:
     well_known_url: str
     http_client: httpx.Client
@@ -41,6 +46,7 @@ class OIDCAuth:
         self.audience = audience
 
         self.jwks_client = PyJWKClient(str(self.well_known.jwks_uri), headers={'user-agent': 'tso-api / 0.1.0'})
+        self.jwks_client.fetch_data()
 
     @cached_property
     def well_known(self) -> OIDCWellKnown:
@@ -54,7 +60,6 @@ class OIDCAuth:
         return self.well_known.issuer
 
     def __call__(self, authorization: Annotated[str | None, Header()] = None) -> User:
-
         if authorization is None:
             msg = 'no authorization header'
             raise AuthenticationError(msg)
@@ -83,7 +88,7 @@ class OIDCAuth:
                 },
                 audience=self.audience,
                 issuer=self.issuer,
-                leeway=20
+                leeway=20,
             )
         except InvalidKeyError as e:
             raise AuthenticationError(str(e), 'invalid_token', 'invalid signing key') from None
@@ -93,3 +98,4 @@ class OIDCAuth:
             raise AuthenticationError(str(e), 'invalid_token', 'token invalid') from None
 
         return User.model_validate(verified_jwt)
+

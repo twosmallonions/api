@@ -1,6 +1,4 @@
-from pydoc import text
 import random
-import re
 import uuid
 from collections.abc import Callable
 

@@ -1,4 +1,3 @@
-import pdb
 from uuid import UUID
 
 import uuid6
@@ -58,8 +57,8 @@ SET
 WHERE
     id = %(id)s"""
 
-DELETE_INGREDIENT = "DELETE FROM ingredients WHERE id = %(id)s"
-DELETE_INSTRUCTION = "DELETE FROM instructions WHERE id = %(id)s"
+DELETE_INGREDIENT = 'DELETE FROM ingredients WHERE id = %(id)s'
+DELETE_INSTRUCTION = 'DELETE FROM instructions WHERE id = %(id)s'
 
 
 async def update_liked(liked: bool, recipe_id: UUID, owner: str, conn: AsyncConnection) -> bool:
@@ -93,6 +92,7 @@ async def update_recipe(recipe: RecipeUpdate, owner: str, recipe_id: UUID, conn:
         deleted_instructions = current_instructions - new_instructions
         for deleted_instruction in deleted_instructions:
             await cur.execute(DELETE_INSTRUCTION, {'id': deleted_instruction})
+
         for position, instruction in enumerate(recipe.instructions):
             if instruction.id is None:
                 await insert_instruction(instruction.text, recipe_id, position, cur)

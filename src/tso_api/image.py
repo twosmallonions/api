@@ -1,0 +1,1 @@
+def open_image()

@@ -1,4 +1,12 @@
 -- migrate:up
+CREATE TABLE assets (
+  id uuid PRIMARY KEY,
+  path varchar(4096) NOT NULL,
+  size integer NOT NULL,
+  original_name varchar(255),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE recipes (
     id uuid PRIMARY KEY,
     owner varchar NOT NULL,
