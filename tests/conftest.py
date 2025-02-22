@@ -1,7 +1,10 @@
 import os
+import random
 import shutil
+import string
 import subprocess
-from collections.abc import Generator
+import uuid
+from collections.abc import Callable, Generator
 
 import pytest
 from psycopg_pool import AsyncConnectionPool
@@ -10,19 +13,29 @@ from testcontainers.postgres import PostgresContainer
 postgres = PostgresContainer('postgres:17')
 
 
+@pytest.fixture
+def owner():
+    return str(uuid.uuid4())
+
+
+@pytest.fixture
+def ascii_letter_string() -> Callable[[int], str]:
+    return lambda n: ''.join(random.choices(string.ascii_letters, k=n))
+
+
 @pytest.fixture(scope='package')
 def setup_db() -> Generator[str]:
     db_url = ''
     if os.environ.get('DATABASE_URL'):
         db_url = os.environ['DATABASE_URL']
     else:
-        _ = postgres.start()
+        postgres.start()
         db_url = f'postgresql://{postgres.username}:{postgres.password}@{postgres.get_container_host_ip()}:{postgres.get_exposed_port(5432)}/{postgres.dbname}?sslmode=disable'
         os.environ['DATABASE_URL'] = db_url
     dbmate_path = shutil.which('dbmate')
     if dbmate_path is None:
         raise Exception("dbmate not found")
-    _ = subprocess.run([dbmate_path, 'up'], check=True)
+    subprocess.run([dbmate_path, 'up'], check=True)
     yield db_url
     postgres.stop()
 
@@ -38,4 +51,5 @@ async def db_pool(setup_db: str):
 @pytest.fixture
 async def conn(db_pool: AsyncConnectionPool):
     async with db_pool.connection() as conn:
+        await conn.set_autocommit(True)
         yield conn

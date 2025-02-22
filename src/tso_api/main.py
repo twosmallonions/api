@@ -63,7 +63,7 @@ def authentication_error_handler(_request: Request, exc: AuthenticationError):
         www_authenticate_header += f' error_description="{exc.error_description}"'
     return Response(status_code=401, headers={'www-authenticate': www_authenticate_header})
 
-
+print(settings.data_dir)
 oidc_auth = OIDCAuth(str(settings.oidc_well_known), settings.jwt_algorithms)
 user = Annotated[User, Depends(oidc_auth)]
 

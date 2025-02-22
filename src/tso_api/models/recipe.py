@@ -4,12 +4,30 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class Instruction(BaseModel):
+class InstructionBase(BaseModel):
     text: str
 
 
-class Ingredient(BaseModel):
+class IngredientBase(BaseModel):
     text: str
+
+
+class InstructionUpdate(BaseModel):
+    text: str
+    id: UUID | None
+
+
+class IngredientUpdate(BaseModel):
+    text: str
+    id: UUID | None
+
+
+class Ingredient(IngredientBase):
+    id: UUID
+
+
+class Instruction(InstructionBase):
+    id: UUID
 
 
 class Recipe(BaseModel):
@@ -18,11 +36,17 @@ class Recipe(BaseModel):
     cook_time: int | None = None
     prep_time: int | None = None
     recipe_yield: str | None = None
+    liked: bool = False
 
 
 class RecipeCreate(Recipe):
     instructions: list[str] = []
     ingredients: list[str] = []
+
+
+class RecipeUpdate(Recipe):
+    instructions: list[InstructionUpdate] = []
+    ingredients: list[IngredientUpdate] = []
 
 
 class RecipeFull(Recipe):
@@ -33,5 +57,5 @@ class RecipeFull(Recipe):
     updated_at: datetime
     total_time: int | None = None
     last_made: datetime | None
-    instructions: list[str] = []
-    ingredients: list[str] = []
+    instructions: list[Instruction] = []
+    ingredients: list[Ingredient] = []

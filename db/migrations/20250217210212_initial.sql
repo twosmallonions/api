@@ -14,6 +14,7 @@ CREATE TABLE recipes (
     ) STORED,
     yield varchar,
     last_made timestamptz,
+    liked bool NOT NULL DEFAULT false,
     UNIQUE (owner, slug)
 );
 
@@ -55,10 +56,11 @@ SELECT
     r.total_time,
     r.yield,
     r.last_made,
+    r.liked,
     (
         SELECT
             array_agg(
-                ins.text
+                json_build_object('text', ins.text, 'id', ins.id)
                 ORDER BY ins.position
             )
         FROM instructions AS ins
@@ -67,7 +69,7 @@ SELECT
     (
         SELECT
             array_agg(
-                ing.text
+                json_build_object('text', ing.text, 'id', ing.id)
                 ORDER BY ing.position
             )
         FROM ingredients AS ing
