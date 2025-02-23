@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -59,3 +60,5 @@ class RecipeFull(Recipe):
     last_made: datetime | None
     instructions: list[Instruction] = []
     ingredients: list[Ingredient] = []
+    cover_image: Path | None = None
+    cover_thumbnail: Path | None = None

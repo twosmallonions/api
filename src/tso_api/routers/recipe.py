@@ -25,4 +25,4 @@ async def get_recipe_by_id(recipe_id: UUID, db: DBConn) -> RecipeFull:
 
 @router.post('/{recipe_id}/cover')
 async def add_cover_image_to_recipe(recipe_id: UUID, file: UploadFile, db: DBConn):
-    recipe_asset.add_cover_image_to_recipe(recipe_id, file, db)
+    recipe_asset.add_cover_image_to_recipe(recipe_id, '1234', file, file.filename, db)

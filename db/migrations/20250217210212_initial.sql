@@ -23,6 +23,8 @@ CREATE TABLE recipes (
     yield varchar,
     last_made timestamptz,
     liked bool NOT NULL DEFAULT false,
+    cover_image uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    cover_thumbnail uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
     UNIQUE (owner, slug)
 );
 
@@ -82,7 +84,9 @@ SELECT
             )
         FROM ingredients AS ing
         WHERE ing.recipe = r.id
-    ) AS ingredients
+    ) AS ingredients,
+    ( SELECT assets.path FROM assets WHERE assets.id = r.cover_image ) AS cover_image,
+    ( SELECT assets.path FROM assets WHERE assets.id = r.cover_thumbnail ) AS cover_thumbnail
 FROM recipes AS r;
 -- migrate:down
 DROP TABLE instructions;

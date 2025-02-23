@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -6,7 +7,7 @@ from pydantic import BaseModel
 
 class AssetBase(BaseModel):
     id: UUID
-    path: str
+    path: Path
     size: int
     original_name: str | None
 

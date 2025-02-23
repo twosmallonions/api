@@ -27,7 +27,7 @@ addopts = [
     "--import-mode=importlib",
     "--continue-on-collection-errors"
 ]
-asyncio_default_fixture_loop_scope = "package"
+asyncio_default_fixture_loop_scope = "module"
 asyncio_mode = "auto"
 
 [tool.ruff]

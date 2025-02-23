@@ -21,6 +21,14 @@ SELECT_RECIPE_BY_ID = 'SELECT * FROM recipes_full WHERE owner = %(owner)s AND id
 
 UPDATE_RECIPE_LIKED = 'UPDATE recipes SET liked = %(liked)s WHERE owner = %(owner)s AND id = %(id)s'
 
+UPDATE_RECIPE_COVER_IMAGE = """UPDATE recipes
+SET
+    cover_image = %(cover_image)s,
+    cover_thumbnail = %(cover_thumbnail)s
+WHERE
+    owner = %(owner)s AND id = %(id)s
+"""
+
 INSERT_RECIPE = """INSERT INTO recipes (id, owner, title, slug, description, cook_time, prep_time, yield, liked)
 VALUES (%(id)s, %(owner)s, %(title)s, %(slug)s, %(description)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s)"""
 
@@ -59,6 +67,16 @@ WHERE
 
 DELETE_INGREDIENT = 'DELETE FROM ingredients WHERE id = %(id)s'
 DELETE_INSTRUCTION = 'DELETE FROM instructions WHERE id = %(id)s'
+
+
+async def update_cover_image(
+    recipe_id: UUID, owner: str, asset_cover_id: UUID, asset_thumbnail_id: UUID, conn: AsyncConnection
+):
+    async with conn.transaction(), conn.cursor() as cur:
+        await cur.execute(
+            UPDATE_RECIPE_COVER_IMAGE,
+            {'cover_image': asset_cover_id, 'cover_thumbnail': asset_thumbnail_id, 'id': recipe_id, 'owner': owner},
+        )
 
 
 async def update_liked(liked: bool, recipe_id: UUID, owner: str, conn: AsyncConnection) -> bool:
@@ -185,6 +203,8 @@ def __recipe_from_row(row: DictRow) -> RecipeFull:
         instructions=row['instructions'] or [],
         ingredients=row['ingredients'] or [],
         liked=row['liked'],
+        cover_image=row['cover_image'],
+        cover_thumbnail=row['cover_thumbnail']
     )
 
 

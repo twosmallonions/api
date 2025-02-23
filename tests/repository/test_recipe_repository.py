@@ -1,12 +1,15 @@
+from pathlib import Path
 import random
 import uuid
 from collections.abc import Callable
 
 import pytest
+import uuid6
 from psycopg import AsyncConnection
 
+from tso_api.models.asset import AssetBase
 from tso_api.models.recipe import IngredientUpdate, InstructionUpdate, RecipeCreate, RecipeFull, RecipeUpdate
-from tso_api.repository import recipe_repository
+from tso_api.repository import asset_repository, recipe_repository
 
 
 @pytest.fixture
@@ -18,6 +21,24 @@ def recipe_create(ascii_letter_string: Callable[[int], str]) -> RecipeCreate:
         prep_time=random.randint(0, 80),
         recipe_yield=ascii_letter_string(5),
     )
+
+
+async def test_recipe_with_cover_image(recipe_create: RecipeCreate, owner: str, conn: AsyncConnection):
+    asset_id = uuid6.uuid7()
+    asset_base_cover = AssetBase(id=asset_id, path=Path('/test/1'), size=623623, original_name='1')
+    await asset_repository.create_asset(asset_base_cover, conn)
+
+    asset_id_thumbnail = uuid6.uuid7()
+    asset_base_thumbnail = AssetBase(id=asset_id_thumbnail, path=Path('/test/2'), size=623623, original_name='1')
+    await asset_repository.create_asset(asset_base_thumbnail, conn)
+
+    recipe = await recipe_repository.create_recipe(recipe_create, owner, conn)
+
+    await recipe_repository.update_cover_image(recipe.id, recipe.owner, asset_id, asset_id_thumbnail, conn)
+    recipe = await recipe_repository.get_recipe_by_id(recipe.id, recipe.owner, conn)
+
+    assert recipe.cover_image == asset_base_cover.path
+    assert recipe.cover_thumbnail == asset_base_thumbnail.path
 
 
 async def test_get_missing_recipe_by_slug_exception(conn: AsyncConnection):
