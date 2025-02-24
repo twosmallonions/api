@@ -1,5 +1,9 @@
+import asyncio
+import io
+from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, UploadFile
+
+from fastapi import APIRouter, File
 
 from tso_api.db import DBConn
 from tso_api.models.recipe import RecipeCreate, RecipeFull
@@ -23,6 +27,9 @@ async def create_recipe(recipe_create: RecipeCreate, db: DBConn) -> RecipeFull:
 async def get_recipe_by_id(recipe_id: UUID, db: DBConn) -> RecipeFull:
     return await recipe_repository.get_recipe_by_id(recipe_id, '123', db)
 
+
 @router.post('/{recipe_id}/cover')
-async def add_cover_image_to_recipe(recipe_id: UUID, file: UploadFile, db: DBConn):
-    recipe_asset.add_cover_image_to_recipe(recipe_id, '1234', file, file.filename, db)
+async def add_cover_image_to_recipe(recipe_id: UUID, file: Annotated[bytes, File()], db: DBConn):
+    r = io.BytesIO(file)
+    loop = asyncio.get_running_loop()
+    await recipe_asset.add_cover_image_to_recipe(recipe_id, '1234', r, None, db)

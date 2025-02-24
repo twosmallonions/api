@@ -187,6 +187,8 @@ async def create_recipe(recipe: RecipeCreate, owner: str, conn: AsyncConnection)
 
 
 def __recipe_from_row(row: DictRow) -> RecipeFull:
+    cover_image_asset_url = f'/asset/{row["cover_image"]}' if row.get("cover_image") else None
+    cover_thumbnail_asset_url = f'/asset/{row["cover_thumbnail"]}' if row.get('cover_thumbnail') else None
     return RecipeFull(
         id=row['id'],
         owner=row['owner'],
@@ -203,8 +205,8 @@ def __recipe_from_row(row: DictRow) -> RecipeFull:
         instructions=row['instructions'] or [],
         ingredients=row['ingredients'] or [],
         liked=row['liked'],
-        cover_image=row['cover_image'],
-        cover_thumbnail=row['cover_thumbnail']
+        cover_image=cover_image_asset_url,
+        cover_thumbnail=cover_thumbnail_asset_url
     )
 
 

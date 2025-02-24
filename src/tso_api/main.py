@@ -40,7 +40,8 @@ async def lifespan(_instance: FastAPI):
     await db_pool.close(timeout=5)
 
 
-app = FastAPI(lifespan=lifespan)
+enable_openapi = '/docs/' if settings.enable_openapi else None
+app = FastAPI(lifespan=lifespan, docs_url=enable_openapi, redoc_url=None)
 app.include_router(recipe_router)
 
 
@@ -54,8 +55,7 @@ def resource_not_found_handler(_request: Request, exc: ResourceNotFoundError):
 
 @app.exception_handler(AuthenticationError)
 def authentication_error_handler(_request: Request, exc: AuthenticationError):
-    print(exc)
-    www_authenticate_header = f'Bearer realm="tso"'
+    www_authenticate_header = 'Bearer realm="tso"'
     if exc.www_authenticate_error:
         www_authenticate_header += f' error="{exc.www_authenticate_error}"'
 
@@ -63,7 +63,7 @@ def authentication_error_handler(_request: Request, exc: AuthenticationError):
         www_authenticate_header += f' error_description="{exc.error_description}"'
     return Response(status_code=401, headers={'www-authenticate': www_authenticate_header})
 
-print(settings.data_dir)
+
 oidc_auth = OIDCAuth(str(settings.oidc_well_known), settings.jwt_algorithms)
 user = Annotated[User, Depends(oidc_auth)]
 

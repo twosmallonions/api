@@ -1,4 +1,3 @@
-from typing import final
 from pydantic import DirectoryPath, HttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,7 +8,7 @@ class Settings(BaseSettings):
     oidc_well_known: HttpUrl
     jwt_algorithms: list[str] = ['RS256']
     data_dir: DirectoryPath
+    enable_openapi: bool = True
 
 
 settings = Settings()  # pyright: ignore [reportCallIssue]
-print(settings.jwt_algorithms)

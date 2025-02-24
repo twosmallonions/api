@@ -1,10 +1,10 @@
 -- migrate:up
 CREATE TABLE assets (
-  id uuid PRIMARY KEY,
-  path varchar(4096) NOT NULL,
-  size integer NOT NULL,
-  original_name varchar(255),
-  created_at timestamptz NOT NULL DEFAULT now()
+    id uuid PRIMARY KEY,
+    path varchar(4096) NOT NULL,
+    size integer NOT NULL,
+    original_name varchar(255),
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE recipes (
@@ -85,8 +85,8 @@ SELECT
         FROM ingredients AS ing
         WHERE ing.recipe = r.id
     ) AS ingredients,
-    ( SELECT assets.path FROM assets WHERE assets.id = r.cover_image ) AS cover_image,
-    ( SELECT assets.path FROM assets WHERE assets.id = r.cover_thumbnail ) AS cover_thumbnail
+    ( SELECT assets.id FROM assets WHERE assets.id = r.cover_image ) AS cover_image,
+    ( SELECT assets.id FROM assets WHERE assets.id = r.cover_thumbnail ) AS cover_thumbnail
 FROM recipes AS r;
 -- migrate:down
 DROP TABLE instructions;

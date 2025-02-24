@@ -3,6 +3,7 @@
   "pythonVersion": "3.13",
   "allowedUntypedLibraries": ["testcontainers.postgres"],
   "reportUnusedCallResult" : false,
+  "reportUnannotatedClassAttribute": false,
   "executionEnvironments": [
     {
       "root": "src/tso_api/repository",

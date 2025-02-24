@@ -34,4 +34,6 @@ ADD --chmod=755 https://github.com/amacneil/dbmate/releases/download/${DBMATE_VE
 COPY --from=builder /app /app
 
 ENV PATH="/app/.venv/bin:$PATH"
+
+ENV ENABLE_OPENAPI=false DATA_DIR=/data
 CMD [ "fastapi", "run", "--host", "0.0.0.0", "/app/src/tso_api/main.py" ]
