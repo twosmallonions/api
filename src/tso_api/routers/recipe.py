@@ -12,7 +12,7 @@ from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight
 from tso_api.repository import asset_repository, recipe_repository
 from tso_api.service import recipe_asset
 
-router = APIRouter(prefix='/recipe')
+router = APIRouter(prefix='/api/recipe')
 
 
 @router.get('/{slug}')

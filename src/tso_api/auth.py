@@ -87,7 +87,7 @@ class OIDCAuth:
                 self.algorithms,
                 {
                     'require': ['exp', 'sub', 'iss', 'aud'],
-                    'verify_aud': True,
+                    'verify_aud': False,
                     'verify_issuer': True,
                     'verify_exp': True,
                 },
