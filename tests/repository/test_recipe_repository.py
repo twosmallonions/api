@@ -1,7 +1,7 @@
-from pathlib import Path
 import random
 import uuid
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 import uuid6
@@ -13,32 +13,49 @@ from tso_api.repository import asset_repository, recipe_repository
 
 
 @pytest.fixture
-def recipe_create(ascii_letter_string: Callable[[int], str]) -> RecipeCreate:
-    return RecipeCreate(
-        title=ascii_letter_string(7),
-        description=ascii_letter_string(50),
-        cook_time=random.randint(0, 80),
-        prep_time=random.randint(0, 80),
-        recipe_yield=ascii_letter_string(5),
-    )
+def recipe_create(recipe_create_fn: Callable[[], RecipeCreate]) -> RecipeCreate:
+    return recipe_create_fn()
+
+
+@pytest.fixture
+def recipe_create_fn(ascii_letter_string: Callable[[int], str]) -> Callable[[], RecipeCreate]:
+    def __run() -> RecipeCreate:
+        return RecipeCreate(
+            title=ascii_letter_string(7),
+            description=ascii_letter_string(50),
+            cook_time=random.randint(0, 80),
+            prep_time=random.randint(0, 80),
+            recipe_yield=ascii_letter_string(5),
+        )
+    return __run
+
+
+async def test_get_recipes_light_by_owner(recipe_create_fn: Callable[[], RecipeCreate], conn: AsyncConnection, owner: str):
+    create_n = 10
+    for _ in range(create_n):
+        await recipe_repository.create_recipe(recipe_create_fn(), owner, conn)
+
+    res = await recipe_repository.get_recipes_light_by_owner(owner, conn)
+
+    assert len(res) == create_n
 
 
 async def test_recipe_with_cover_image(recipe_create: RecipeCreate, owner: str, conn: AsyncConnection):
     asset_id = uuid6.uuid7()
     asset_base_cover = AssetBase(id=asset_id, path=Path('/test/1'), size=623623, original_name='1')
-    await asset_repository.create_asset(asset_base_cover, conn)
+    await asset_repository.create_asset(asset_base_cover, owner, conn)
 
     asset_id_thumbnail = uuid6.uuid7()
     asset_base_thumbnail = AssetBase(id=asset_id_thumbnail, path=Path('/test/2'), size=623623, original_name='1')
-    await asset_repository.create_asset(asset_base_thumbnail, conn)
+    await asset_repository.create_asset(asset_base_thumbnail, owner, conn)
 
     recipe = await recipe_repository.create_recipe(recipe_create, owner, conn)
 
     await recipe_repository.update_cover_image(recipe.id, recipe.owner, asset_id, asset_id_thumbnail, conn)
     recipe = await recipe_repository.get_recipe_by_id(recipe.id, recipe.owner, conn)
 
-    assert recipe.cover_image == asset_base_cover.path
-    assert recipe.cover_thumbnail == asset_base_thumbnail.path
+    assert recipe.cover_image == f'/asset/{asset_base_cover.id}'
+    assert recipe.cover_thumbnail == f'/asset/{asset_base_thumbnail.id}'
 
 
 async def test_get_missing_recipe_by_slug_exception(conn: AsyncConnection):

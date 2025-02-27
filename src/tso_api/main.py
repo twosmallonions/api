@@ -2,12 +2,11 @@ import asyncio
 import shutil
 from contextlib import asynccontextmanager
 from http import HTTPStatus
-from typing import Annotated
 
-from fastapi import Depends, FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
-from tso_api.auth import AuthenticationError, OIDCAuth, User
+from tso_api.auth import AuthenticationError
 from tso_api.config import settings
 from tso_api.db import db_pool
 from tso_api.repository.recipe_repository import ResourceNotFoundError
@@ -62,12 +61,3 @@ def authentication_error_handler(_request: Request, exc: AuthenticationError):
     if exc.error_description:
         www_authenticate_header += f' error_description="{exc.error_description}"'
     return Response(status_code=401, headers={'www-authenticate': www_authenticate_header})
-
-
-oidc_auth = OIDCAuth(str(settings.oidc_well_known), settings.jwt_algorithms)
-user = Annotated[User, Depends(oidc_auth)]
-
-
-@app.get('/test')
-def auth(user: Annotated[User, Depends(oidc_auth)]):
-    return user.sub

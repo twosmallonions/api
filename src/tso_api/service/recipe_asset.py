@@ -10,7 +10,6 @@ from PIL.Image import Resampling
 from PIL.ImageFile import ImageFile
 from psycopg import AsyncConnection
 
-from tso_api.config import settings
 from tso_api.models.asset import AssetBase
 from tso_api.repository import asset_repository
 
@@ -32,7 +31,7 @@ async def add_cover_image_to_recipe(
         None, save_image, cover_image, owner_hash, recipe_id, cover_image_id, RECIPE_COVER_IMAGE_FORMAT
     )
 
-    await create_asset(cover_image_path, original_filename, cover_image_id, conn)
+    await create_asset(cover_image_path, original_filename, cover_image_id, owner, conn)
 
     thumbnail_image_id = uuid6.uuid7()
     thumbnail_image = await loop.run_in_executor(None, make_thumbnail, cover_image)
@@ -40,7 +39,7 @@ async def add_cover_image_to_recipe(
         None, save_image, thumbnail_image, owner_hash, recipe_id, thumbnail_image_id, RECIPE_COVER_IMAGE_FORMAT
     )
 
-    await create_asset(thumbnail_image_path, original_filename, thumbnail_image_id, conn)
+    await create_asset(thumbnail_image_path, original_filename, thumbnail_image_id, owner, conn)
 
 
 def make_thumbnail(img: ImageFile | Image.Image):
@@ -50,16 +49,18 @@ def make_thumbnail(img: ImageFile | Image.Image):
 
 
 def save_image(image: Image.Image, owner_hash: str, recipe_id: UUID, image_id: UUID, extension: str) -> Path:
-    image_path = Path(settings.data_dir) / owner_hash / str(recipe_id) / f'{image_id}.{extension}'
+    image_path = Path(owner_hash) / str(recipe_id) / f'{image_id}.{extension}'
     image_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(image_path)
 
     return image_path
 
 
-async def create_asset(image_path: Path, original_filename: str | None, image_id: UUID, conn: AsyncConnection):
+async def create_asset(
+    image_path: Path, original_filename: str | None, image_id: UUID, owner: str, conn: AsyncConnection
+):
     asset = AssetBase(id=image_id, path=image_path, size=image_path.stat().st_size, original_name=original_filename)
-    await asset_repository.create_asset(asset, conn)
+    await asset_repository.create_asset(asset, owner, conn)
 
 
 def resize_for_recipe_cover(image: ImageFile):

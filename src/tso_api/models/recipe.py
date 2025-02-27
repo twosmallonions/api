@@ -1,8 +1,7 @@
 from datetime import datetime
-from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 
 
 class InstructionBase(BaseModel):
@@ -40,6 +39,11 @@ class Recipe(BaseModel):
     liked: bool = False
 
 
+class Timestamps(BaseModel):
+    created_at: datetime
+    updated_at: datetime
+
+
 class RecipeCreate(Recipe):
     instructions: list[str] = []
     ingredients: list[str] = []
@@ -50,15 +54,22 @@ class RecipeUpdate(Recipe):
     ingredients: list[IngredientUpdate] = []
 
 
-class RecipeFull(Recipe):
+class RecipeFull(Recipe, Timestamps):
     id: UUID
     owner: str
     slug: str
-    created_at: datetime
-    updated_at: datetime
     total_time: int | None = None
     last_made: datetime | None
     instructions: list[Instruction] = []
     ingredients: list[Ingredient] = []
     cover_image: str | None = None
     cover_thumbnail: str | None = None
+
+
+class RecipeLight(Timestamps):
+    id: UUID
+    owner: str
+    slug: str
+    title: str
+    descirption: str | None
+    liked: bool

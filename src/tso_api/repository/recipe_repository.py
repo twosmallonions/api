@@ -4,7 +4,7 @@ import uuid6
 from psycopg import AsyncConnection, AsyncCursor, sql
 from psycopg.rows import DictRow, dict_row
 
-from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeUpdate
+from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 
 
 class ResourceNotFoundError(Exception):
@@ -18,6 +18,7 @@ class ResourceNotFoundError(Exception):
 
 SELECT_RECIPE_BY_SLUG = 'SELECT * FROM recipes_full WHERE owner = %(owner)s AND slug = %(slug)s'
 SELECT_RECIPE_BY_ID = 'SELECT * FROM recipes_full WHERE owner = %(owner)s AND id = %(id)s'
+SELECT_RECIPE_LIGHT_BY_OWNER = 'SELECT * FROM recipes_lite WHERE owner = %s'
 
 UPDATE_RECIPE_LIKED = 'UPDATE recipes SET liked = %(liked)s WHERE owner = %(owner)s AND id = %(id)s'
 
@@ -67,6 +68,26 @@ WHERE
 
 DELETE_INGREDIENT = 'DELETE FROM ingredients WHERE id = %(id)s'
 DELETE_INSTRUCTION = 'DELETE FROM instructions WHERE id = %(id)s'
+
+
+async def get_recipes_light_by_owner(owner: str, conn: AsyncConnection):
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        res = await (await cur.execute(SELECT_RECIPE_LIGHT_BY_OWNER, (owner,))).fetchall()
+
+    return [__recipe_light_from_row(recipe) for recipe in res]
+
+
+def __recipe_light_from_row(row: DictRow) -> RecipeLight:
+    return RecipeLight(
+        id=row['id'],
+        owner=row['owner'],
+        slug=row['slug'],
+        title=row['title'],
+        descirption=row['description'],
+        liked=row['liked'],
+        created_at=row['created_at'],
+        updated_at=row['updated_at'],
+    )
 
 
 async def update_cover_image(
@@ -187,7 +208,7 @@ async def create_recipe(recipe: RecipeCreate, owner: str, conn: AsyncConnection)
 
 
 def __recipe_from_row(row: DictRow) -> RecipeFull:
-    cover_image_asset_url = f'/asset/{row["cover_image"]}' if row.get("cover_image") else None
+    cover_image_asset_url = f'/asset/{row["cover_image"]}' if row.get('cover_image') else None
     cover_thumbnail_asset_url = f'/asset/{row["cover_thumbnail"]}' if row.get('cover_thumbnail') else None
     return RecipeFull(
         id=row['id'],
@@ -206,7 +227,7 @@ def __recipe_from_row(row: DictRow) -> RecipeFull:
         ingredients=row['ingredients'] or [],
         liked=row['liked'],
         cover_image=cover_image_asset_url,
-        cover_thumbnail=cover_thumbnail_asset_url
+        cover_thumbnail=cover_thumbnail_asset_url,
     )
 
 

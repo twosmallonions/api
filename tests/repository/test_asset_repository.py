@@ -1,4 +1,6 @@
 from pathlib import Path
+from uuid import UUID
+
 import uuid6
 from psycopg import AsyncConnection
 
@@ -6,12 +8,12 @@ from tso_api.models.asset import AssetBase
 from tso_api.repository import asset_repository
 
 
-async def test_create_asset(conn: AsyncConnection):
+async def test_create_asset(owner: str, conn: AsyncConnection):
     asset_id = uuid6.uuid7()
     asset_base = AssetBase(id=asset_id, path=Path('/test/1'), size=623623, original_name='1')
-    await asset_repository.create_asset(asset_base, conn)
+    await asset_repository.create_asset(asset_base, owner, conn)
 
-    asset = await asset_repository.get_asset_by_id(asset_id, conn)
+    asset = await asset_repository.get_asset_by_id(asset_id, owner, conn)
 
     assert asset.id == asset_id
     assert asset.path == asset_base.path

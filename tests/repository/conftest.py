@@ -13,9 +13,6 @@ from testcontainers.postgres import PostgresContainer
 postgres = PostgresContainer('postgres:17')
 
 
-@pytest.fixture
-def owner():
-    return str(uuid.uuid4())
 
 
 @pytest.fixture

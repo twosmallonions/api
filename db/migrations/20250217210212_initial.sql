@@ -4,7 +4,8 @@ CREATE TABLE assets (
     path varchar(4096) NOT NULL,
     size integer NOT NULL,
     original_name varchar(255),
-    created_at timestamptz NOT NULL DEFAULT now()
+    created_at timestamptz NOT NULL DEFAULT now(),
+    owner uuid NOT NULL
 );
 
 CREATE TABLE recipes (
@@ -51,6 +52,18 @@ CREATE TABLE ingredients (
 );
 
 CREATE INDEX ON ingredients (recipe);
+
+CREATE VIEW recipes_lite AS
+SELECT
+    r.id,
+    r.owner,
+    r.slug,
+    r.title,
+    r.description,
+    r.created_at,
+    r.updated_at,
+    r.liked
+FROM recipes r;
 
 CREATE VIEW recipes_full AS
 SELECT
