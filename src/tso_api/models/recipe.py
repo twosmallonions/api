@@ -73,5 +73,5 @@ class RecipeLight(Timestamps):
     owner: str
     slug: str
     title: str
-    descirption: str | None
+    description: str | None
     liked: bool

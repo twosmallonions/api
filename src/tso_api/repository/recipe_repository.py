@@ -83,7 +83,7 @@ def __recipe_light_from_row(row: DictRow) -> RecipeLight:
         owner=row['owner'],
         slug=row['slug'],
         title=row['title'],
-        descirption=row['description'],
+        description=row['description'],
         liked=row['liked'],
         created_at=row['created_at'],
         updated_at=row['updated_at'],
