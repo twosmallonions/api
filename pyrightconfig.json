@@ -1,13 +1,17 @@
 {
-  "include": ["src", "test"],
-  "pythonVersion": "3.13",
-  "allowedUntypedLibraries": ["testcontainers.postgres"],
-  "reportUnusedCallResult" : false,
-  "reportUnannotatedClassAttribute": false,
-  "executionEnvironments": [
-    {
-      "root": "src/tso_api/repository",
-      "reportAny": false
-    }
+    "include": ["src", "test"],
+    "pythonVersion": "3.13",
+    "allowedUntypedLibraries": ["testcontainers.postgres"],
+    "reportUnusedCallResult" : false,
+    "reportUnannotatedClassAttribute": false,
+    "executionEnvironments": [
+        {
+            "root": "src/tso_api/repository",
+            "reportAny": false
+        },
+        {
+            "root": "src/tso_api/models",
+            "reportAny": false
+        }
   ]
 }

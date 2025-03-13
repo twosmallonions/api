@@ -1,16 +1,21 @@
 -- migrate:up
+CREATE TABLE collections (
+    id uuid PRIMARY KEY,
+    name varchar(500) NOT NULL
+);
+
 CREATE TABLE assets (
     id uuid PRIMARY KEY,
     path varchar(4096) NOT NULL,
     size integer NOT NULL,
     original_name varchar(255),
     created_at timestamptz NOT NULL DEFAULT now(),
-    owner uuid NOT NULL
+    collection uuid NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE recipes (
     id uuid PRIMARY KEY,
-    owner varchar NOT NULL,
+    collection uuid NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE
     title varchar NOT NULL,
     slug varchar NOT NULL,
     description text,
@@ -26,7 +31,7 @@ CREATE TABLE recipes (
     liked bool NOT NULL DEFAULT false,
     cover_image uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
     cover_thumbnail uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    UNIQUE (owner, slug)
+    UNIQUE (collection, slug)
 );
 
 CREATE TABLE instructions (
@@ -56,7 +61,7 @@ CREATE INDEX ON ingredients (recipe);
 CREATE VIEW recipes_lite AS
 SELECT
     r.id,
-    r.owner,
+    r.collection,
     r.slug,
     r.title,
     r.description,
@@ -68,7 +73,7 @@ FROM recipes r;
 CREATE VIEW recipes_full AS
 SELECT
     r.id,
-    r.owner,
+    r.collection,
     r.title,
     r.slug,
     r.description,
@@ -102,5 +107,8 @@ SELECT
     ( SELECT assets.id FROM assets WHERE assets.id = r.cover_thumbnail ) AS cover_thumbnail
 FROM recipes AS r;
 -- migrate:down
+DROP TABLE ingredients;
 DROP TABLE instructions;
 DROP TABLE recipes;
+DROP TABLE assets;
+
