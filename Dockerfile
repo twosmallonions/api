@@ -18,7 +18,7 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
-FROM python:3.13-slim-bookworm@sha256:ae9f9ac89467077ed1efefb6d9042132d28134ba201b2820227d46c9effd3174
+FROM python:3.13-slim-bookworm@sha256:43ff25c50c7a3f7065200f9e962ac2944eeb0694594cf8f0c4362867301af370
 
 WORKDIR /app
 
