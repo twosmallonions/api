@@ -1,21 +1,39 @@
 -- migrate:up
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    subject VARCHAR(500) NOT NULL,
+    issuer VARCHAR(500) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (subject, issuer)
+);
+
 CREATE TABLE collections (
-    id uuid PRIMARY KEY,
-    name varchar(500) NOT NULL
+    id UUID PRIMARY KEY,
+    name VARCHAR(500) NOT NULL,
+    slug VARCHAR(500) NOT NULL,
+    UNIQUE (slug)
+);
+
+CREATE TABLE collection_members (
+    collection UUID REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    user INTEGER REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    owner BOOLEAN NOT NULL DEFAULT false,
+    PRIMARY KEY (collection, user)
 );
 
 CREATE TABLE assets (
-    id uuid PRIMARY KEY,
-    path varchar(4096) NOT NULL,
-    size integer NOT NULL,
-    original_name varchar(255),
-    created_at timestamptz NOT NULL DEFAULT now(),
-    collection uuid NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE
+    id UUID PRIMARY KEY,
+    path VARCHAR(4096) NOT NULL,
+    size INTEGER NOT NULL,
+    original_name VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    collection UUID NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE recipes (
     id uuid PRIMARY KEY,
-    collection uuid NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE
+    collection uuid NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
     title varchar NOT NULL,
     slug varchar NOT NULL,
     description text,
