@@ -9,11 +9,16 @@ from fastapi.responses import FileResponse
 from tso_api.config import settings
 from tso_api.dependency import DBConn, user
 from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight
-from tso_api.repository import asset_repository, recipe_repository
+from tso_api.repository import asset_repository, collection_repository, recipe_repository
 from tso_api.service import recipe_asset
 
 router = APIRouter(prefix='/api/recipe')
 
+
+@router.get('/user/{name}')
+async def user_test(user: user, name: str, db: DBConn):
+    await collection_repository.new_collection(name, user, db)
+    return user
 
 @router.get('/{slug}')
 async def get_recipe_by_slug(slug: str, user: user, db: DBConn) -> RecipeFull:
@@ -45,4 +50,3 @@ async def add_cover_image_to_recipe(recipe_id: UUID, user: user, file: Annotated
 async def get_asset(asset_id: UUID, user: user, db: DBConn):
     asset = await asset_repository.get_asset_by_id(asset_id, user.sub, db)
     return FileResponse(Path(settings.data_dir) / asset.path, headers={'cache-control': 'max-age=604800, private'})
-

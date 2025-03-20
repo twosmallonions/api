@@ -2,25 +2,36 @@
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    subject VARCHAR(500) NOT NULL,
-    issuer VARCHAR(500) NOT NULL,
+    subject VARCHAR(1000) NOT NULL,
+    issuer VARCHAR(1000) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    email VARCHAR(1000) NOT NULL,
+    username VARCHAR(1000) NOT NULL,
     UNIQUE (subject, issuer)
 );
+
+CREATE INDEX ON users USING hash (subject);
+CREATE INDEX ON users USING hash (issuer);
 
 CREATE TABLE collections (
     id UUID PRIMARY KEY,
     name VARCHAR(500) NOT NULL,
     slug VARCHAR(500) NOT NULL,
+    owner INTEGER NOT NULL,
     UNIQUE (slug)
 );
 
 CREATE TABLE collection_members (
-    collection UUID REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    user INTEGER REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    owner BOOLEAN NOT NULL DEFAULT false,
-    PRIMARY KEY (collection, user)
+    id SERIAL PRIMARY KEY,
+    collection UUID NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    "user" INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+ALTER TABLE collections
+  ADD CONSTRAINT owner_fk
+  FOREIGN KEY (owner)
+  REFERENCES collection_members (id)
+  ON DELETE RESTRICT ON UPDATE CASCADE;
 
 CREATE TABLE assets (
     id UUID PRIMARY KEY,
@@ -129,4 +140,3 @@ DROP TABLE ingredients;
 DROP TABLE instructions;
 DROP TABLE recipes;
 DROP TABLE assets;
-

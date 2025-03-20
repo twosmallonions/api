@@ -3,11 +3,15 @@ from typing import Annotated, final
 
 import httpx
 import jwt
-from fastapi import Header
+from fastapi import Depends, Header
 from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
+from psycopg import AsyncConnection, AsyncCursor
+from psycopg.rows import DictRow, dict_row
 from pydantic import BaseModel, HttpUrl
 
 from tso_api.config import settings
+from tso_api.db import get_connection
+from tso_api.models.user import User
 
 
 class OIDCWellKnown(BaseModel):
@@ -15,8 +19,11 @@ class OIDCWellKnown(BaseModel):
     jwks_uri: HttpUrl
 
 
-class User(BaseModel):
+class JWT(BaseModel):
+    iss: str
     sub: str
+    email: str
+    preferred_username: str
 
 
 @final
@@ -61,7 +68,7 @@ class OIDCAuth:
     def issuer(self) -> str:
         return self.well_known.issuer
 
-    def __call__(self, authorization: Annotated[str | None, Header()] = None) -> User:
+    def __call__(self, authorization: Annotated[str | None, Header()] = None) -> JWT:
         if authorization is None:
             msg = 'no authorization header'
             print(msg)
@@ -105,7 +112,54 @@ class OIDCAuth:
             print(e)
             raise AuthenticationError(str(e), 'invalid_token', 'token invalid') from None
 
-        return User.model_validate(verified_jwt)
+        return JWT.model_validate(verified_jwt)
 
 
 oidc_auth = OIDCAuth(str(settings.oidc_well_known), settings.jwt_algorithms)
+
+
+async def get_user(
+    conn: Annotated[AsyncConnection, Depends(get_connection)], jwt: Annotated[JWT, Depends(oidc_auth)]
+) -> User:
+    QUERY = 'SELECT * FROM users WHERE subject = %s AND issuer = %s'
+
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        res = await cur.execute(QUERY, (jwt.sub, jwt.iss))
+        user = await res.fetchone()
+        if user is None:
+            user = await __create_user(cur, jwt)
+        else:
+            print(user)
+            user = User(
+                id=user['id'],
+                subject=user['subject'],
+                issuer=user['issuer'],
+                created_at=user['created_at'],
+                username=user['username'],
+                email=user['email'],
+            )
+
+        return user
+
+
+async def __create_user(cur: AsyncCursor[DictRow], jwt: JWT) -> User:
+    QUERY = """INSERT INTO
+    users (subject, issuer, email, username)
+VALUES
+    (%s, %s, %s, %s)
+RETURNING id, created_at"""
+
+    res = await (await cur.execute(QUERY, (jwt.sub, jwt.iss, jwt.email, jwt.preferred_username))).fetchone()
+    if res is None:
+        # FIXME: raise some kind of server error here
+        msg = 'internal error'
+        raise AuthenticationError(msg)
+
+    return User(
+        id=res['id'],
+        created_at=res['created_at'],
+        subject=jwt.sub,
+        issuer=jwt.iss,
+        username=jwt.preferred_username,
+        email=jwt.email,
+    )

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from base import TSOBase
+from tso_api.models.base import TSOBase
 
 
 class DatabaseUser(TSOBase):
