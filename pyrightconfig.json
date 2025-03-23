@@ -4,6 +4,8 @@
     "allowedUntypedLibraries": ["testcontainers.postgres"],
     "reportUnusedCallResult" : false,
     "reportUnannotatedClassAttribute": false,
+    "reportAny": false,
+    "reportExplicitAny": false,
     "executionEnvironments": [
         {
             "root": "src/tso_api/repository",

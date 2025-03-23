@@ -5,6 +5,7 @@ from psycopg import AsyncConnection, AsyncCursor, sql
 from psycopg.rows import DictRow, dict_row
 
 from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
+from tso_api.models.user import User
 
 
 class ResourceNotFoundError(Exception):
@@ -16,9 +17,20 @@ class ResourceNotFoundError(Exception):
         super().__init__(self.msg.format(resource))
 
 
-SELECT_RECIPE_BY_SLUG = 'SELECT * FROM recipes_full WHERE owner = %(owner)s AND slug = %(slug)s'
-SELECT_RECIPE_BY_ID = 'SELECT * FROM recipes_full WHERE owner = %(owner)s AND id = %(id)s'
-SELECT_RECIPE_LIGHT_BY_OWNER = 'SELECT * FROM recipes_lite WHERE owner = %s'
+SELECT_RECIPE_BY_SLUG = """SELECT r.* FROM recipes_full r
+INNER JOIN collections c
+ON c.id = r.collection
+LEFT JOIN collection_members cm
+ON cm.collection = r.collection AND cm.user = %(user_id)s
+WHERE r.slug = %(slug)s AND (c.owner = %(user_id)s OR cm.user IS NOT NULL)"""
+
+SELECT_RECIPE_BY_ID = """SELECT r.* FROM recipes_full r
+INNER JOIN collections c
+ON c.id = r.collection
+LEFT JOIN collection_members cm
+ON cm.collection = r.collection AND cm.user = %(user_id)s
+WHERE r.id = %(id)s AND (c.owner = %(user_id)s OR cm.user IS NOT NULL)"""
+SELECT_RECIPE_LIGHT_BY_OWNER = 'SELECT * FROM recipes_lite WHERE %(user_id) IN users'
 
 UPDATE_RECIPE_LIKED = 'UPDATE recipes SET liked = %(liked)s WHERE owner = %(owner)s AND id = %(id)s'
 
@@ -30,8 +42,9 @@ WHERE
     owner = %(owner)s AND id = %(id)s
 """
 
-INSERT_RECIPE = """INSERT INTO recipes (id, owner, title, slug, description, cook_time, prep_time, yield, liked)
-VALUES (%(id)s, %(owner)s, %(title)s, %(slug)s, %(description)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s)"""
+INSERT_RECIPE = """INSERT INTO recipes
+(id, collection, created_by, title, slug, cook_time, prep_time, yield, liked)
+VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(slug)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s)"""
 
 UPDATE_RECIPE = """UPDATE recipes
 SET
@@ -80,7 +93,7 @@ async def get_recipes_light_by_owner(owner: str, conn: AsyncConnection):
 def __recipe_light_from_row(row: DictRow) -> RecipeLight:
     return RecipeLight(
         id=row['id'],
-        owner=row['owner'],
+        collection=row['collection'],
         slug=row['slug'],
         title=row['title'],
         description=row['description'],
@@ -175,14 +188,15 @@ async def insert_instruction(text: str, recipe_id: UUID, position: int, cur: Asy
     return ingredient_id
 
 
-async def create_recipe(recipe: RecipeCreate, owner: str, conn: AsyncConnection) -> RecipeFull:
+async def create_recipe(recipe: RecipeCreate, created_by: User, collection: UUID, conn: AsyncConnection) -> RecipeFull:
     async with conn.transaction(), conn.cursor() as cur:
         recipe_id = uuid6.uuid7()
         _ = await cur.execute(
             INSERT_RECIPE,
             {
                 'id': recipe_id,
-                'owner': owner,
+                'collection': collection,
+                'created_by': created_by.id,
                 'title': recipe.title,
                 'slug': recipe.title.lower(),
                 'description': recipe.description,
@@ -204,7 +218,7 @@ async def create_recipe(recipe: RecipeCreate, owner: str, conn: AsyncConnection)
 
             _ = await cur.executemany(query, params_instructions)
 
-    return await get_recipe_by_slug(recipe.title.lower(), owner, conn)
+    return await get_recipe_by_slug(recipe.title.lower(), created_by, conn)
 
 
 def __recipe_from_row(row: DictRow) -> RecipeFull:
@@ -212,10 +226,10 @@ def __recipe_from_row(row: DictRow) -> RecipeFull:
     cover_thumbnail_asset_url = f'/asset/{row["cover_thumbnail"]}' if row.get('cover_thumbnail') else None
     return RecipeFull(
         id=row['id'],
-        owner=row['owner'],
+        collection=row['collection'],
+        created_by=row['created_by'],
         title=row['title'],
         slug=row['slug'],
-        description=row['description'],
         created_at=row['created_at'],
         updated_at=row['updated_at'],
         cook_time=row['cook_time'],
@@ -231,9 +245,9 @@ def __recipe_from_row(row: DictRow) -> RecipeFull:
     )
 
 
-async def get_recipe_by_id(recipe_id: UUID, owner: str, conn: AsyncConnection) -> RecipeFull:
+async def get_recipe_by_id(recipe_id: UUID, user: User, conn: AsyncConnection) -> RecipeFull:
     async with conn.cursor(row_factory=dict_row) as cur:
-        row = await (await cur.execute(SELECT_RECIPE_BY_ID, {'owner': owner, 'id': recipe_id})).fetchone()
+        row = await (await cur.execute(SELECT_RECIPE_BY_ID, {'user_id': user.id, 'id': recipe_id})).fetchone()
 
     if row is None:
         raise ResourceNotFoundError(str(recipe_id))
@@ -241,9 +255,9 @@ async def get_recipe_by_id(recipe_id: UUID, owner: str, conn: AsyncConnection) -
     return __recipe_from_row(row)
 
 
-async def get_recipe_by_slug(slug: str, owner: str, conn: AsyncConnection) -> RecipeFull:
+async def get_recipe_by_slug(slug: str, user: User, conn: AsyncConnection) -> RecipeFull:
     async with conn.cursor(row_factory=dict_row) as cur:
-        row = await (await cur.execute(SELECT_RECIPE_BY_SLUG, {'owner': owner, 'slug': slug})).fetchone()
+        row = await (await cur.execute(SELECT_RECIPE_BY_SLUG, {'user_id': user.id, 'slug': slug})).fetchone()
 
     if row is None:
         raise ResourceNotFoundError(slug)

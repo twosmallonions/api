@@ -12,6 +12,7 @@ from pydantic import BaseModel, HttpUrl
 from tso_api.config import settings
 from tso_api.db import get_connection
 from tso_api.models.user import User
+from tso_api.repository import collection_repository
 
 
 class OIDCWellKnown(BaseModel):
@@ -129,7 +130,6 @@ async def get_user(
         if user is None:
             user = await __create_user(cur, jwt)
         else:
-            print(user)
             user = User(
                 id=user['id'],
                 subject=user['subject'],
@@ -143,17 +143,18 @@ async def get_user(
 
 
 async def __create_user(cur: AsyncCursor[DictRow], jwt: JWT) -> User:
-    QUERY = """INSERT INTO
+    query_create_user = """INSERT INTO
     users (subject, issuer, email, username)
 VALUES
     (%s, %s, %s, %s)
 RETURNING id, created_at"""
 
-    res = await (await cur.execute(QUERY, (jwt.sub, jwt.iss, jwt.email, jwt.preferred_username))).fetchone()
+    res = await (await cur.execute(query_create_user, (jwt.sub, jwt.iss, jwt.email, jwt.preferred_username))).fetchone()
     if res is None:
         # FIXME: raise some kind of server error here
         msg = 'internal error'
         raise AuthenticationError(msg)
+    await collection_repository.new_collection_cur('Default', res['id'], cur)
 
     return User(
         id=res['id'],

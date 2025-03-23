@@ -4,11 +4,15 @@ import shutil
 import string
 import subprocess
 import uuid
-from collections.abc import Callable, Generator
+from collections.abc import Awaitable, Callable, Generator
 
+from psycopg import AsyncConnection
 import pytest
 from psycopg_pool import AsyncConnectionPool
 from testcontainers.postgres import PostgresContainer
+
+from tso_api.models.user import User
+from tso_api.repository import collection_repository, user_repository
 
 postgres = PostgresContainer('postgres:17')
 
@@ -49,3 +53,30 @@ async def conn(db_pool: AsyncConnectionPool):
     async with db_pool.connection() as conn:
         await conn.set_autocommit(True)
         yield conn
+
+
+UserFn = Callable[[AsyncConnection], Awaitable[User]]
+@pytest.fixture
+def user():
+    async def __create(conn: AsyncConnection) -> User:
+        user = await user_repository.create_user(str(uuid.uuid4()), 'https://idp.example.com', conn)
+        return User(id=user.id, subject=user.subject, issuer=user.issuer, created_at=user.created_at, username='test', email='test@test.com')
+
+    return __create
+
+
+@pytest.fixture
+def user_col_fn(user: UserFn):
+    user_fn = user
+
+    async def __create(conn: AsyncConnection) -> tuple[User, uuid.UUID]:
+        user = await user_fn(conn)
+        col = await collection_repository.new_collection("Default", user, conn)
+        return (user, col.id)
+
+    return __create
+
+
+@pytest.fixture
+async def user_col(user_col_fn: Callable[[AsyncConnection], Awaitable[tuple[User, uuid.UUID]]], conn: AsyncConnection):
+    return await user_col_fn(conn)

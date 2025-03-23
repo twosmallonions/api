@@ -9,6 +9,7 @@ from psycopg import AsyncConnection
 
 from tso_api.models.asset import AssetBase
 from tso_api.models.recipe import IngredientUpdate, InstructionUpdate, RecipeCreate, RecipeFull, RecipeUpdate
+from tso_api.models.user import User
 from tso_api.repository import asset_repository, recipe_repository
 
 
@@ -68,10 +69,11 @@ async def test_get_missing_recipe_by_id_exception(conn: AsyncConnection):
         await recipe_repository.get_recipe_by_id(uuid.uuid4(), str(uuid.uuid4()), conn)
 
 
-async def test_get_recipe_id(recipe_create: RecipeCreate, owner: str, conn: AsyncConnection):
-    recipe = await recipe_repository.create_recipe(recipe_create, owner, conn)
+async def test_get_recipe_id(recipe_create: RecipeCreate, user_col: tuple[User, uuid.UUID], conn: AsyncConnection):
+    user, col = user_col
+    recipe = await recipe_repository.create_recipe(recipe_create, user, col, conn)
 
-    fetched_recipe = await recipe_repository.get_recipe_by_id(recipe.id, recipe.owner, conn)
+    fetched_recipe = await recipe_repository.get_recipe_by_id(recipe.id, user, conn)
 
     assert fetched_recipe.id == recipe.id
 

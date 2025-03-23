@@ -1,6 +1,6 @@
 from psycopg import AsyncConnection
 
-from recipe_repository import ResourceNotFoundError
+from tso_api.repository.recipe_repository import ResourceNotFoundError
 from tso_api.models.user import DatabaseUser
 
 CREATE_USER_QUERY = "INSERT INTO users (subject, issuer) VALUES (%s, %s)"
@@ -11,7 +11,7 @@ async def create_user(subject: str, issuer: str, conn: AsyncConnection):
     async with conn.transaction(), conn.cursor() as cur:
         await cur.execute(CREATE_USER_QUERY, (subject, issuer))
 
-    return get_user(subject, issuer, conn)
+    return await get_user(subject, issuer, conn)
 
 
 async def get_user(subject: str, issuer: str, conn: AsyncConnection):

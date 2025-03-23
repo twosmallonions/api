@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from base import TSOBase
-from user import User
+from tso_api.models.base import TSOBase
+from tso_api.models.user import User
 
 
 class CollectionBase(TSOBase):
@@ -11,7 +11,7 @@ class CollectionBase(TSOBase):
 class CollectionFull(CollectionBase):
     id: UUID
     slug: str
-    owner: 'CollectionMember'
+    owner: int
 
 
 class CollectionMember(TSOBase):

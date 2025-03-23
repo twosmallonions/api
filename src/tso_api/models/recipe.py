@@ -58,7 +58,6 @@ class RecipeUpdate(Recipe):
 
 class RecipeFull(Recipe, Timestamps):
     id: UUID
-    owner: str
     slug: str
     total_time: int | None = None
     last_made: datetime | None
@@ -66,11 +65,13 @@ class RecipeFull(Recipe, Timestamps):
     ingredients: list[Ingredient] = Field(default_factory=list)
     cover_image: str | None = None
     cover_thumbnail: str | None = None
+    collection: UUID
+    created_by: int
 
 
 class RecipeLight(Timestamps):
     id: UUID
-    owner: str
+    collection: UUID
     slug: str
     title: str
     description: str | None

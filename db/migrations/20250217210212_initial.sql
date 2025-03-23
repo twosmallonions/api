@@ -5,8 +5,6 @@ CREATE TABLE users (
     subject VARCHAR(1000) NOT NULL,
     issuer VARCHAR(1000) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    email VARCHAR(1000) NOT NULL,
-    username VARCHAR(1000) NOT NULL,
     UNIQUE (subject, issuer)
 );
 
@@ -18,14 +16,22 @@ CREATE TABLE collections (
     name VARCHAR(500) NOT NULL,
     slug VARCHAR(500) NOT NULL,
     owner INTEGER NOT NULL REFERENCES users (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    UNIQUE (slug)
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (slug, owner)
 );
+
+CREATE INDEX ON collections (owner);
 
 CREATE TABLE collection_members (
     id SERIAL PRIMARY KEY,
     collection UUID NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    "user" INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE
+    "user" INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE (collection, "user")
 );
+
+CREATE INDEX ON collection_members (collection);
+CREATE INDEX ON collection_members ("user");
 
 CREATE TABLE assets (
     id UUID PRIMARY KEY,
@@ -41,9 +47,10 @@ CREATE TABLE recipes (
     collection uuid NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
     title varchar NOT NULL,
     slug varchar NOT NULL,
-    description text,
+    note text,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
+    created_by INTEGER NOT NULL REFERENCES users (id) ON DELETE RESTRICT ON UPDATE CASCADE,
     cook_time int,
     prep_time int,
     total_time int GENERATED ALWAYS AS (
@@ -87,7 +94,6 @@ SELECT
     r.collection,
     r.slug,
     r.title,
-    r.description,
     r.created_at,
     r.updated_at,
     r.liked
@@ -99,7 +105,6 @@ SELECT
     r.collection,
     r.title,
     r.slug,
-    r.description,
     r.created_at,
     r.updated_at,
     r.cook_time,
@@ -108,6 +113,7 @@ SELECT
     r.yield,
     r.last_made,
     r.liked,
+    r.created_by,
     (
         SELECT
             array_agg(
