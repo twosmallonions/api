@@ -17,7 +17,7 @@ CREATE TABLE collections (
     id UUID PRIMARY KEY,
     name VARCHAR(500) NOT NULL,
     slug VARCHAR(500) NOT NULL,
-    owner INTEGER NOT NULL,
+    owner INTEGER NOT NULL REFERENCES users (id) ON DELETE RESTRICT ON UPDATE CASCADE,
     UNIQUE (slug)
 );
 
@@ -26,12 +26,6 @@ CREATE TABLE collection_members (
     collection UUID NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
     "user" INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
-ALTER TABLE collections
-  ADD CONSTRAINT owner_fk
-  FOREIGN KEY (owner)
-  REFERENCES collection_members (id)
-  ON DELETE RESTRICT ON UPDATE CASCADE;
 
 CREATE TABLE assets (
     id UUID PRIMARY KEY,
