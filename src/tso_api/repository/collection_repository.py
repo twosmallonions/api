@@ -1,53 +1,47 @@
 from typing import Any
 from uuid import UUID
-from psycopg.rows import DictRow, dict_row
+from sqlalchemy import Row, insert, select, or_
 import uuid6
-from psycopg import AsyncConnection, AsyncCursor, cursor
+from sqlalchemy.ext.asyncio import AsyncConnection
+
+from tso_api.schema import t_collections, t_collection_members
 
 from tso_api.models.user import User
 from tso_api.models.collection import CollectionFull
 
 
-async def new_collection_cur(name: str, user: User, cur: AsyncCursor[Any]):
-    collection_insert = """INSERT INTO
-collections (id, name, slug, owner)
-VALUES (%s, %s, %s, %s)
-RETURNING id, name, slug, owner, created_at, updated_at"""
-
+async def new_collection_cur(name: str, user: User, conn: AsyncConnection):
     collection_id = uuid6.uuid7()
-    res = await (await cur.execute(collection_insert, (collection_id, name, name.lower(), user.id))).fetchone()
+    stmt = (
+        insert(t_collections)
+        .values(id=collection_id, name=name, slug=name.lower(), owner=user.id)
+        .returning(t_collections)
+    )
+
+    res = await conn.execute(stmt)
+    res = res.fetchone()
+
     if res is None:
         raise Exception('ahh')
     return __collection_from_row(res)
 
 
-async def new_collection(name: str, user: User, db: AsyncConnection):
-    async with db.transaction(), db.cursor(row_factory=dict_row) as cur:
-        return await new_collection_cur(name, user, cur)
+async def get_collections_for_user(user: User, conn: AsyncConnection):
+    stmt = (
+        select(t_collections)
+        .join(t_collection_members, t_collection_members.c.collection == t_collections.c.id)
+        .where(or_(t_collection_members.c.user == user.id, t_collections.c.owner == user.id))
+    )
 
+    rows = (await conn.execute(stmt)).fetchall()
 
-async def get_collections_for_user(user: User, db: AsyncConnection):
-    async with db.transaction(), db.cursor(row_factory=dict_row) as cur:
-        res = await cur.execute("""SELECT c.* FROM collections c
-LEFT JOIN collection_members cm
-ON cm.collection = c.id
-WHERE cm.user = %(user_id)s OR c.owner = %(user_id)s""", {'user_id': user.id})
-        rows = await res.fetchall()
-
-        return [__collection_from_row(row) for row in rows]
+    return [__collection_from_row(row) for row in rows]
 
 
 async def add_collection_member(collection: UUID, user: User, db: AsyncConnection):
-    async with db.transaction(), db.cursor() as cur:
-        await cur.execute("""INSERT INTO collection_members
-(collection, "user")
-VALUES (%s, %s)""", (collection, user.id))
+    stmt = insert(t_collections).values(collection=collection, user=user.id)
+    await db.execute(stmt)
 
 
-def __collection_from_row(row: DictRow) -> CollectionFull:
-    return CollectionFull(
-        name=row['name'],
-        id=row['id'],
-        slug=row['slug'],
-        owner=row['owner']
-    )
+def __collection_from_row(row: Row[Any]) -> CollectionFull:
+    return CollectionFull.model_validate(row, from_attributes=True)

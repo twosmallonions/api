@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 
 from tso_api.auth import AuthenticationError
 from tso_api.config import settings
-from tso_api.db import db_pool
 from tso_api.repository.recipe_repository import ResourceNotFoundError
 from tso_api.routers.recipe import router as recipe_router
 
@@ -34,9 +33,7 @@ async def lifespan(_instance: FastAPI):
     code = await proc.wait()
     if code != 0:
         raise DBMigrationError(stderr.decode())
-    await db_pool.open(timeout=5)
     yield
-    await db_pool.close(timeout=5)
 
 
 enable_openapi = '/docs/' if settings.enable_openapi else None
