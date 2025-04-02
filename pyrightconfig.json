@@ -4,6 +4,7 @@
     "allowedUntypedLibraries": ["testcontainers.postgres"],
     "reportUnusedCallResult" : false,
     "reportUnannotatedClassAttribute": false,
+    "reportUninitializedInstanceVariable": false,
     "reportAny": false,
     "reportExplicitAny": false,
     "executionEnvironments": [

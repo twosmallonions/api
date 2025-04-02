@@ -1,6 +1,7 @@
-from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from tso_api.config import settings
 
@@ -13,9 +14,11 @@ url_object = URL.create(
     port=settings.postgres_port,
 )
 
-engine = create_async_engine(url_object)
+engine = create_async_engine(url_object, echo=True)
+Session = async_sessionmaker(engine)
 
 
-async def get_connection() -> AsyncGenerator[AsyncConnection, None]:
+@asynccontextmanager
+async def get_connection():
     async with engine.connect() as conn:
         yield conn

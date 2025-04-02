@@ -11,7 +11,6 @@ class CollectionBase(TSOBase):
 class CollectionFull(CollectionBase):
     id: UUID
     slug: str
-    owner: int
 
 
 class CollectionMember(TSOBase):
