@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from tso_api.auth import AuthenticationError
 from tso_api.config import settings
 from tso_api.db import db_pool
-from tso_api.repository.recipe_repository import ResourceNotFoundError
+from tso_api.service.base_service import ResourceNotFoundError
 from tso_api.routers.recipe import router as recipe_router
 
 

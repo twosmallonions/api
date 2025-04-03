@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from tso_api.models.base import TSOBase
+from tso_api.models.base import Timestamps, TSOBase
 from tso_api.models.user import User
 
 
@@ -8,10 +8,13 @@ class CollectionBase(TSOBase):
     name: str
 
 
-class CollectionFull(CollectionBase):
+class CollectionCreate(CollectionBase):
+    pass
+
+
+class CollectionFull(CollectionBase, Timestamps):
     id: UUID
     slug: str
-    owner: int
 
 
 class CollectionMember(TSOBase):

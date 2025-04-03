@@ -4,7 +4,7 @@ from psycopg import AsyncConnection
 from psycopg.rows import dict_row
 
 from tso_api.models.asset import Asset, AssetBase
-from tso_api.repository.recipe_repository import ResourceNotFoundError
+from tso_api.service.base_service import ResourceNotFoundError
 
 INSERT_ASSET = """INSERT INTO
 assets (id, path, size, original_name, owner)

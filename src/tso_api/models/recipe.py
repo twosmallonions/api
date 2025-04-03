@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from tso_api.models.base import TSOBase
+from tso_api.models.base import TSOBase, Timestamps
 
 
 class InstructionBase(TSOBase):
@@ -34,16 +34,12 @@ class Instruction(InstructionBase):
 
 class Recipe(TSOBase):
     title: str
-    description: str | None = None
+    note: str = ""
     cook_time: int | None = None
     prep_time: int | None = None
     recipe_yield: str | None = None
     liked: bool = False
-
-
-class Timestamps(TSOBase):
-    created_at: datetime
-    updated_at: datetime
+    collection: UUID
 
 
 class RecipeCreate(Recipe):
@@ -66,7 +62,7 @@ class RecipeFull(Recipe, Timestamps):
     cover_image: str | None = None
     cover_thumbnail: str | None = None
     collection: UUID
-    created_by: int
+    created_by: UUID
 
 
 class RecipeLight(Timestamps):

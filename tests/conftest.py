@@ -1,6 +1,8 @@
 import uuid
 
 import pytest
+from testcontainers.postgres import PostgresContainer
+
 
 
 @pytest.fixture

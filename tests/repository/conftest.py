@@ -6,8 +6,8 @@ import subprocess
 import uuid
 from collections.abc import Awaitable, Callable, Generator
 
-from psycopg import AsyncConnection
 import pytest
+from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 from testcontainers.postgres import PostgresContainer
 
@@ -15,8 +15,6 @@ from tso_api.models.user import User
 from tso_api.repository import collection_repository, user_repository
 
 postgres = PostgresContainer('postgres:17')
-
-
 
 
 @pytest.fixture
