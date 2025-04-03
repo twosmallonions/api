@@ -761,25 +761,25 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.115.8" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "opendal", specifier = ">=0.45.15" },
-    { name = "pillow", specifier = ">=11.1.0" },
-    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.4" },
-    { name = "pydantic", specifier = ">=2.10.6" },
-    { name = "pydantic-settings", specifier = ">=2.7.1" },
-    { name = "pyhumps", specifier = ">=3.8.0" },
-    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.10.1" },
-    { name = "python-multipart", specifier = ">=0.0.20" },
-    { name = "uuid6", specifier = ">=2024.7.10" },
+    { name = "fastapi", extras = ["standard"], specifier = "==0.115.12" },
+    { name = "httpx", specifier = "==0.28.1" },
+    { name = "opendal", specifier = "==0.45.16" },
+    { name = "pillow", specifier = "==11.1.0" },
+    { name = "psycopg", extras = ["binary", "pool"], specifier = "==3.2.6" },
+    { name = "pydantic", specifier = "==2.10.6" },
+    { name = "pydantic-settings", specifier = "==2.8.1" },
+    { name = "pyhumps", specifier = "==3.8.0" },
+    { name = "pyjwt", extras = ["crypto"], specifier = "==2.10.1" },
+    { name = "python-multipart", specifier = "==0.0.20" },
+    { name = "uuid6", specifier = "==2024.7.10" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pytest", specifier = ">=8.3.4" },
-    { name = "pytest-asyncio", specifier = ">=0.25.3" },
-    { name = "ruff", specifier = ">=0.9.6" },
-    { name = "testcontainers", extras = ["postgres"], specifier = ">=4.9.1" },
+    { name = "pytest", specifier = "==8.3.5" },
+    { name = "pytest-asyncio", specifier = "==0.25.3" },
+    { name = "ruff", specifier = "==0.11.2" },
+    { name = "testcontainers", extras = ["postgres"], specifier = "==4.9.2" },
 ]
 
 [[package]]
