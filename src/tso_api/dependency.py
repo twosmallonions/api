@@ -2,7 +2,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncConnection
+from psycopg import AsyncConnection
 
 from tso_api.auth import get_user
 from tso_api.db import get_connection

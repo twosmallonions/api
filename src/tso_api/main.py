@@ -8,10 +8,9 @@ from fastapi.responses import JSONResponse
 
 from tso_api.auth import AuthenticationError
 from tso_api.config import settings
-from tso_api.db import get_connection
+from tso_api.db import db_pool
 from tso_api.repository.recipe_repository import ResourceNotFoundError
 from tso_api.routers.recipe import router as recipe_router
-from tso_api.schema.recipe_schema import Base
 
 
 class DBMigrationError(Exception):
@@ -23,9 +22,21 @@ class DBMigrationError(Exception):
 
 @asynccontextmanager
 async def lifespan(_instance: FastAPI):
-    async with get_connection() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    dbmate_path = shutil.which('dbmate')
+    if dbmate_path is None:
+        msg = 'dbmate not found'
+        raise DBMigrationError(msg)
+
+    proc = await asyncio.create_subprocess_shell(
+        f'{dbmate_path} up', stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+    _stdout, stderr = await proc.communicate()
+    code = await proc.wait()
+    if code != 0:
+        raise DBMigrationError(stderr.decode())
+    await db_pool.open(timeout=5)
     yield
+    await db_pool.close(timeout=5)
 
 
 enable_openapi = '/docs/' if settings.enable_openapi else None
