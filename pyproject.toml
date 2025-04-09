@@ -25,9 +25,8 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
-    "--continue-on-collection-errors"
 ]
-asyncio_default_fixture_loop_scope = "module"
+asyncio_default_fixture_loop_scope = "package"
 asyncio_mode = "auto"
 markers = ['collections']
 

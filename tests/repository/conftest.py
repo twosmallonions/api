@@ -7,7 +7,8 @@ import uuid
 from collections.abc import Awaitable, Callable, Generator
 
 import pytest
-from psycopg import AsyncConnection
+from psycopg import AsyncConnection, AsyncCursor, Rollback
+from psycopg.rows import DictRow, dict_row
 from psycopg_pool import AsyncConnectionPool
 from testcontainers.postgres import PostgresContainer
 
@@ -17,12 +18,15 @@ from tso_api.repository import collection_repository, user_repository
 postgres = PostgresContainer('postgres:17')
 
 
+AsciiLetterString = Callable[[int], str]
+
+
 @pytest.fixture
-def ascii_letter_string() -> Callable[[int], str]:
+def ascii_letter_string() -> AsciiLetterString:
     return lambda n: ''.join(random.choices(string.ascii_letters, k=n))
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='package')
 def setup_db() -> Generator[str]:
     db_url = ''
     if os.environ.get('DATABASE_URL'):
@@ -38,7 +42,7 @@ def setup_db() -> Generator[str]:
     postgres.stop()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='package')
 async def db_pool(setup_db: str):
     db_pool = AsyncConnectionPool(setup_db, open=False)
     await db_pool.open(wait=True, timeout=5)
@@ -48,33 +52,50 @@ async def db_pool(setup_db: str):
 
 @pytest.fixture
 async def conn(db_pool: AsyncConnectionPool):
-    async with db_pool.connection() as conn:
-        await conn.set_autocommit(True)
+    async with db_pool.connection() as conn, conn.transaction():
         yield conn
+        raise Rollback
 
 
-UserFn = Callable[[AsyncConnection], Awaitable[User]]
+@pytest.fixture
+def cur(conn: AsyncConnection):
+    return conn.cursor(row_factory=dict_row)
+
+
+UserFn = Callable[[AsyncCursor[DictRow]], Awaitable[User]]
+
+
 @pytest.fixture
 def user():
-    async def __create(conn: AsyncConnection) -> User:
-        user = await user_repository.create_user(str(uuid.uuid4()), 'https://idp.example.com', conn)
-        return User(id=user.id, subject=user.subject, issuer=user.issuer, created_at=user.created_at, username='test', email='test@test.com')
+    async def __create(cur: AsyncCursor[DictRow]) -> User:
+        subject = str(uuid.uuid4())
+        issuer = 'https://idp.example.com'
+        await user_repository.create_user(subject, issuer, cur)
+        user = await user_repository.get_user(subject, issuer, cur)
+        assert user
+        return User(id=user['id'], subject=user['subject'], issuer=user['issuer'], created_at=user['created_at'])
 
     return __create
 
 
+UserColFn = Callable[[AsyncCursor[DictRow]], Awaitable[tuple[User, uuid.UUID]]]
+
+
 @pytest.fixture
-def user_col_fn(user: UserFn):
+def user_col_fn(user: UserFn) -> UserColFn:
     user_fn = user
 
-    async def __create(conn: AsyncConnection) -> tuple[User, uuid.UUID]:
-        user = await user_fn(conn)
-        col = await collection_repository.new_collection("Default", user, conn)
-        return (user, col.id)
+    async def __create(cur: AsyncCursor[DictRow]) -> tuple[User, uuid.UUID]:
+        user = await user_fn(cur)
+        await collection_repository.new_collection("Default", cur)
+        coll = await collection_repository.get_collection_by_name("Default", cur)
+        assert coll
+        await collection_repository.add_collection_member(coll['id'], user.id, cur)
+        return (user, coll['id'])
 
     return __create
 
 
 @pytest.fixture
-async def user_col(user_col_fn: Callable[[AsyncConnection], Awaitable[tuple[User, uuid.UUID]]], conn: AsyncConnection):
-    return await user_col_fn(conn)
+async def user_col(user_col_fn: UserColFn, cur: AsyncCursor[DictRow]):
+    return await user_col_fn(cur)

@@ -39,7 +39,6 @@ class Recipe(TSOBase):
     prep_time: int | None = None
     recipe_yield: str | None = None
     liked: bool = False
-    collection: UUID
 
 
 class RecipeCreate(Recipe):

@@ -4,7 +4,9 @@ CREATE TABLE users (
     subject VARCHAR(1000) NOT NULL,
     issuer VARCHAR(1000) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (subject, issuer)
+    UNIQUE (subject, issuer),
+    CHECK (length(subject) > 0),
+    CHECK (length(issuer) > 0)
 );
 
 CREATE INDEX ON users USING hash (subject);
@@ -13,9 +15,9 @@ CREATE INDEX ON users USING hash (issuer);
 CREATE TABLE collections (
     id UUID PRIMARY KEY,
     name VARCHAR(500) NOT NULL,
-    slug VARCHAR(500) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CHECK (length(name) > 0)
 );
 
 CREATE TABLE collection_members (
@@ -56,7 +58,8 @@ CREATE TABLE recipes (
     liked bool NOT NULL DEFAULT false,
     cover_image uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
     cover_thumbnail uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    UNIQUE (collection, slug)
+    UNIQUE (collection, slug),
+    CHECK (length(title) > 0)
 );
 
 CREATE TABLE instructions (

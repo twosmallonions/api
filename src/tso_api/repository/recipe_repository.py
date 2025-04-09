@@ -123,7 +123,7 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
     )
 
 
-async def create_recipe(recipe: RecipeCreate, created_by: UUID, cur: AsyncCursor[DictRow]) -> UUID:
+async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]) -> UUID:
     query = """INSERT INTO recipes
     (id, collection, created_by, title, slug, cook_time, prep_time, yield, liked, note)
     VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(slug)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s)"""
@@ -133,7 +133,7 @@ async def create_recipe(recipe: RecipeCreate, created_by: UUID, cur: AsyncCursor
         query,
         {
             'id': recipe_id,
-            'collection': recipe.collection,
+            'collection': collection_id,
             'created_by': created_by,
             'title': recipe.title,
             'slug': recipe.title.lower(),
@@ -150,7 +150,3 @@ async def create_recipe(recipe: RecipeCreate, created_by: UUID, cur: AsyncCursor
 
 async def get_recipe_by_id(recipe_id: UUID, user_id: UUID, cur: AsyncCursor[DictRow]):
     return await (await cur.execute(SELECT_FULL_RECIPE_QUERY, {'user_id': user_id, 'id': recipe_id})).fetchone()
-
-
-async def get_recipe_by_slug(slug: str, user_id: UUID, cur: AsyncCursor[DictRow]):
-    return await (await cur.execute(SELECT_FULL_RECIPE_QUERY, {'user_id': user_id, 'param': 'id', 'arg': slug})).fetchone()
