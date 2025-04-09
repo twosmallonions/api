@@ -1,4 +1,4 @@
-FROM python:3.13-bookworm@sha256:19849ba9f7b8d6ac434e56464d541e7e1b579af881594974b797d99a2f079569 AS builder
+FROM python:3.13-bookworm@sha256:e42879face5e3050d961c12ed1c5b6efd2578ead5a415b0d924b1d3e8df78ee8 AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.6.12@sha256:515b886e8eb99bcf9278776d8ea41eb4553a794195ef5803aa7ca6258653100d /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
