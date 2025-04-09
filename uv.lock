@@ -344,23 +344,6 @@ wheels = [
 ]
 
 [[package]]
-name = "opendal"
-version = "0.45.16"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c7/ce/b11efb1b6d3690d3365a608b01265b2ba635c793df1968f0bcfd29fa10f6/opendal-0.45.16.tar.gz", hash = "sha256:12aec9c0c72260377d8cbc76a9c953763fd627b6b435e709dfd46a5d546d2c48", size = 854122 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/03/f0b893388dc81acbf133345d52b5b54cdc7f3fce8d20d14fb2eb822963dd/opendal-0.45.16-cp311-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:d2f75b34c89e104448b8c2323cfdd7c5055a0f2df286ed460ea502253fae4115", size = 26534372 },
-    { url = "https://files.pythonhosted.org/packages/82/f4/e958ad87ba8eb8e4a8565aad0c8b4784ebaaa32f6bf0784e3c90281cb9ec/opendal-0.45.16-cp311-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:270be49daee1fd8a1cfa229c827e450ba0d50d99f34c0a77271979b599136ccc", size = 12724528 },
-    { url = "https://files.pythonhosted.org/packages/45/72/b4fed73ad54d531c81e51b8ca196730c3449667b397282e0d884edc538dc/opendal-0.45.16-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:05e6eade550f80e6f0cb1ceae4f645bba87da77b4cce212a81727e8461d934f2", size = 14253095 },
-    { url = "https://files.pythonhosted.org/packages/c5/0a/d268ee19b05cb67d22af8ce2bcfed39f585018ea44a1475c316f49061d10/opendal-0.45.16-cp311-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:ff201deb49ec0ff2c3f5db97a74a2cbcc35675a610808bb4f199d404bdf76b67", size = 13230715 },
-    { url = "https://files.pythonhosted.org/packages/ac/c4/9cafb607d2875ab64b6878623782be58cccd9fc1dfe31d3f02bab64fbef5/opendal-0.45.16-cp311-abi3-win_amd64.whl", hash = "sha256:45ded14e0fddbfd445f23cec1cb10a1d86f2d80444fd8e1ced0d5678b7372c8b", size = 14926205 },
-    { url = "https://files.pythonhosted.org/packages/46/59/b8b9dbd300ae26a18584cc1f6524119d2244d790e327d84a015059e60623/opendal-0.45.16-cp313-cp313t-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:85bd6ed1e3b8588ac0e5767e0f0aa4d2403efc9dc4297057b30bd819b7db30e6", size = 26528705 },
-    { url = "https://files.pythonhosted.org/packages/61/bf/d206eb6bbc60b6334e08be98c1caf76015762c1a09afbd9070e5039b288d/opendal-0.45.16-cp313-cp313t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:59a9f276469f7d682d325499bb39a3e220ce1e97207e4a6ffa14ef6144f4aebe", size = 12725234 },
-    { url = "https://files.pythonhosted.org/packages/37/1b/190dae421d38f97dfe747dcc5cbac6d03f8bdcb57c0e08c1f797e6977d2c/opendal-0.45.16-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:71567e66c11735d5a1b4cf0530e2976c0cb61681f6bd20872d767b0eb257299c", size = 14244381 },
-    { url = "https://files.pythonhosted.org/packages/34/87/5ec0c62691b4486d7ed407c62fc6c9957e3280f4d732640e6a9fd8eb05a9/opendal-0.45.16-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:f08a4abf498b56b3c6c5bccdeebfd0d6b33821053691cbf2c7335b4ecb53113a", size = 13233839 },
-]
-
-[[package]]
 name = "packaging"
 version = "24.2"
 source = { registry = "https://pypi.org/simple" }
@@ -565,14 +548,14 @@ wheels = [
 
 [[package]]
 name = "pytest-asyncio"
-version = "0.25.3"
+version = "0.26.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/a8/ecbc8ede70921dd2f544ab1cadd3ff3bf842af27f87bbdea774c7baa1d38/pytest_asyncio-0.25.3.tar.gz", hash = "sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a", size = 54239 }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/c4/453c52c659521066969523e87d85d54139bbd17b78f09532fb8eb8cdb58e/pytest_asyncio-0.26.0.tar.gz", hash = "sha256:c4df2a697648241ff39e7f0e4a73050b03f123f760673956cf0d72a4990e312f", size = 54156 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/17/3493c5624e48fd97156ebaec380dcaafee9506d7e2c46218ceebbb57d7de/pytest_asyncio-0.25.3-py3-none-any.whl", hash = "sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3", size = 19467 },
+    { url = "https://files.pythonhosted.org/packages/20/7f/338843f449ace853647ace35870874f69a764d251872ed1b4de9f234822c/pytest_asyncio-0.26.0-py3-none-any.whl", hash = "sha256:7b51ed894f4fbea1340262bdae5135797ebbe21d8638978e35d31c6d19f72fb0", size = 19694 },
 ]
 
 [[package]]
@@ -740,7 +723,6 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "httpx" },
-    { name = "opendal" },
     { name = "pillow" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pydantic" },
@@ -763,7 +745,6 @@ dev = [
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = "==0.115.12" },
     { name = "httpx", specifier = "==0.28.1" },
-    { name = "opendal", specifier = "==0.45.16" },
     { name = "pillow", specifier = "==11.1.0" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = "==3.2.6" },
     { name = "pydantic", specifier = "==2.10.6" },
@@ -777,7 +758,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = "==8.3.5" },
-    { name = "pytest-asyncio", specifier = "==0.25.3" },
+    { name = "pytest-asyncio", specifier = "==0.26.0" },
     { name = "ruff", specifier = "==0.11.4" },
     { name = "testcontainers", extras = ["postgres"], specifier = "==4.9.2" },
 ]
