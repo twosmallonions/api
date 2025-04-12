@@ -1,93 +1,50 @@
 -- migrate:up
-CREATE TABLE users (
+
+CREATE ROLE tso_api_user;
+CREATE SCHEMA tso;
+GRANT usage ON SCHEMA tso TO tso_api_user;
+
+CREATE FUNCTION tso.set_uid(user_id uuid) RETURNS VOID 
+AS $$
+BEGIN
+    EXECUTE format('set local tso.user_id to %I', user_id);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION tso.get_current_user_id() RETURNS uuid 
+AS $$
+BEGIN
+    RETURN COALESCE(NULLIF(current_setting('tso.user_id', true), '')::uuid, UUID('00000000-0000-0000-0000-000000000000'));
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION tso.update_updated_at() RETURNS trigger
+AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE tso.users (
     id UUID PRIMARY KEY,
     subject VARCHAR(1000) NOT NULL,
     issuer VARCHAR(1000) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (subject, issuer),
     CHECK (length(subject) > 0),
     CHECK (length(issuer) > 0)
 );
 
-CREATE INDEX ON users USING hash (subject);
-CREATE INDEX ON users USING hash (issuer);
+CREATE TRIGGER tso_users_update_updated_at BEFORE UPDATE
+    ON tso.users 
+    FOR EACH ROW
+    EXECUTE FUNCTION tso.update_updated_at();
 
-CREATE TABLE collections (
-    id UUID PRIMARY KEY,
-    name VARCHAR(500) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (length(name) > 0)
-);
 
-CREATE TABLE collection_members (
-    id SERIAL PRIMARY KEY,
-    collection UUID NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    "user" UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE (collection, "user")
-);
+GRANT SELECT, INSERT, UPDATE, DELETE ON tso.users TO tso_api_user;
 
-CREATE INDEX ON collection_members (collection);
-CREATE INDEX ON collection_members ("user");
-
-CREATE TABLE assets (
-    id UUID PRIMARY KEY,
-    path VARCHAR(4096) NOT NULL,
-    size INTEGER NOT NULL,
-    original_name VARCHAR(255),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    collection UUID NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE recipes (
-    id uuid PRIMARY KEY,
-    collection uuid NOT NULL REFERENCES collections (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    title varchar NOT NULL,
-    slug varchar NOT NULL,
-    note text,
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    created_by UUID NOT NULL REFERENCES users (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    cook_time int,
-    prep_time int,
-    total_time int GENERATED ALWAYS AS (
-        coalesce(cook_time, 0) + coalesce(prep_time, 0)
-    ) STORED,
-    yield varchar,
-    last_made timestamptz,
-    liked bool NOT NULL DEFAULT false,
-    cover_image uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    cover_thumbnail uuid REFERENCES assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    UNIQUE (collection, slug),
-    CHECK (length(title) > 0)
-);
-
-CREATE TABLE instructions (
-    id uuid PRIMARY KEY,
-    text text NOT NULL,
-    recipe uuid REFERENCES recipes (
-        id
-    ) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
-    position int NOT NULL,
-    UNIQUE (recipe, position) DEFERRABLE INITIALLY DEFERRED
-);
-
-CREATE INDEX ON instructions (recipe);
-
-CREATE TABLE ingredients (
-    id uuid PRIMARY KEY,
-    text text NOT NULL,
-    recipe uuid REFERENCES recipes (
-        id
-    ) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
-    position int NOT NULL,
-    UNIQUE (recipe, position) DEFERRABLE INITIALLY DEFERRED
-);
-
-CREATE INDEX ON ingredients (recipe);
-
+CREATE INDEX ON tso.users USING hash (subject);
+CREATE INDEX ON tso.users USING hash (issuer);
 -- migrate:down
-DROP TABLE ingredients;
-DROP TABLE instructions;
-DROP TABLE recipes;
-DROP TABLE assets;

@@ -1,4 +1,3 @@
-from copy import deepcopy
 import random
 from collections.abc import Callable
 from typing import Any
@@ -59,6 +58,7 @@ def compare_recipe_with_recipe_update(recipe: dict[str, Any], recipe_update: Rec
 
 
 async def test_create_recipe(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
+    print(id(cur))
     user, coll = user_col
     recipe_create = recipe_create_fn()
     recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
@@ -72,6 +72,8 @@ async def test_create_recipe(recipe_create_fn: RecipeCreateFn, user_col: tuple[U
 
 
 async def test_create_recipe_empty_title(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
+
+    print(id(cur))
     user, coll = user_col
     recipe_create = recipe_create_fn()
     recipe_create.title = ''
@@ -80,6 +82,7 @@ async def test_create_recipe_empty_title(recipe_create_fn: RecipeCreateFn, user_
 
 
 async def test_get_recipe_by_id(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
+    print(id(cur))
     user, coll = user_col
     recipe_create = recipe_create_fn()
     recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
@@ -93,6 +96,7 @@ async def test_get_recipe_by_id(recipe_create_fn: RecipeCreateFn, user_col: tupl
 
 
 async def test_update_recipe(recipe_create_fn: RecipeCreateFn, recipe_update: RecipeUpdate, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
+    print(id(cur))
     user, coll = user_col
     recipe_create = recipe_create_fn()
     recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)

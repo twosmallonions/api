@@ -5,19 +5,17 @@ import httpx
 import jwt
 from fastapi import Depends, Header
 from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
-from psycopg import AsyncConnection, AsyncCursor
-from psycopg.rows import DictRow, dict_row
 from pydantic import BaseModel, HttpUrl
 
 from tso_api.config import settings
-from tso_api.db import get_connection
 from tso_api.models.user import User
-from tso_api.repository import collection_repository
+from tso_api.service import user_service
 
 
 class OIDCWellKnown(BaseModel):
     issuer: str
     jwks_uri: HttpUrl
+    id_token_signing_alg_values_supported: list[str]
 
 
 class JWT(BaseModel):
@@ -45,14 +43,12 @@ AUTHORIZATION_HEADER_PARTS = 2
 class OIDCAuth:
     well_known_url: str
     http_client: httpx.Client
-    algorithms: list[str]
     audience: str
     jwks_client: PyJWKClient
 
-    def __init__(self, well_known_url: str, algorithms: list[str], audience: str = 'tso-api') -> None:
+    def __init__(self, well_known_url: str, audience: str = 'tso-api') -> None:
         self.well_known_url = well_known_url
         self.http_client = httpx.Client(headers={'user-agent': 'tso-api / 0.1.0'})
-        self.algorithms = algorithms
         self.audience = audience
 
         self.jwks_client = PyJWKClient(str(self.well_known.jwks_uri), headers={'user-agent': 'tso-api / 0.1.0'})
@@ -92,7 +88,7 @@ class OIDCAuth:
             verified_jwt = jwt.decode(
                 token,
                 signing_key,
-                self.algorithms,
+                self.well_known.id_token_signing_alg_values_supported,
                 {
                     'require': ['exp', 'sub', 'iss', 'aud'],
                     'verify_aud': False,
@@ -116,51 +112,8 @@ class OIDCAuth:
         return JWT.model_validate(verified_jwt)
 
 
-oidc_auth = OIDCAuth(str(settings.oidc_well_known), settings.jwt_algorithms)
+oidc_auth = OIDCAuth(str(settings.oidc_well_known))
 
 
-async def get_user(
-    conn: Annotated[AsyncConnection, Depends(get_connection)], jwt: Annotated[JWT, Depends(oidc_auth)]
-) -> User:
-    QUERY = 'SELECT * FROM users WHERE subject = %s AND issuer = %s'
-
-    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
-        res = await cur.execute(QUERY, (jwt.sub, jwt.iss))
-        user = await res.fetchone()
-        if user is None:
-            user = await __create_user(cur, jwt)
-        else:
-            user = User(
-                id=user['id'],
-                subject=user['subject'],
-                issuer=user['issuer'],
-                created_at=user['created_at'],
-                username=user['username'],
-                email=user['email'],
-            )
-
-        return user
-
-
-async def __create_user(cur: AsyncCursor[DictRow], jwt: JWT) -> User:
-    query_create_user = """INSERT INTO
-    users (subject, issuer, email, username)
-VALUES
-    (%s, %s, %s, %s)
-RETURNING id, created_at"""
-
-    res = await (await cur.execute(query_create_user, (jwt.sub, jwt.iss, jwt.email, jwt.preferred_username))).fetchone()
-    if res is None:
-        # FIXME: raise some kind of server error here
-        msg = 'internal error'
-        raise AuthenticationError(msg)
-    await collection_repository.new_collection_cur('Default', res['id'], cur)
-
-    return User(
-        id=res['id'],
-        created_at=res['created_at'],
-        subject=jwt.sub,
-        issuer=jwt.iss,
-        username=jwt.preferred_username,
-        email=jwt.email,
-    )
+async def get_user(jwt: Annotated[JWT, Depends(oidc_auth)]) -> User:
+    return await user_service.get_or_create_user(jwt.sub, jwt.iss)

@@ -1,17 +1,24 @@
+from typing import Any
 from uuid import UUID
 
 from psycopg.rows import DictRow
 from psycopg_pool import AsyncConnectionPool
 
-from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeUpdate
+from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 from tso_api.models.user import User
 from tso_api.repository import ingredient_repository, instruction_repository, recipe_repository
 from tso_api.service.base_service import BaseService, ResourceNotFoundError
 
 
 class RecipeService(BaseService):
-    def __init__(self, pool: AsyncConnectionPool) -> None:
+    def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
         super().__init__(pool)
+
+    async def get_recipes_by_user(self, user: User) -> list[RecipeLight]:
+        async with self.begin() as cur:
+            recipes = await recipe_repository.get_recipes_light_by_owner(user.id, cur)
+
+        return [_recipe_light_from_row(recipe) for recipe in recipes]
 
     async def get_by_id(self, recipe_id: UUID, user: User):
         async with self.begin() as cur:
@@ -22,9 +29,9 @@ class RecipeService(BaseService):
 
             return _recipe_from_row(recipe)
 
-    async def create(self, recipe_create: RecipeCreate, user: User):
+    async def create(self, recipe_create: RecipeCreate, user: User, collection_id: UUID):
         async with self.begin() as cur:
-            recipe_id = await recipe_repository.create_recipe(recipe_create, user.id, cur)
+            recipe_id = await recipe_repository.create_recipe(recipe_create, collection_id, user.id, cur)
 
             for position, ingredient in enumerate(recipe_create.ingredients):
                 await ingredient_repository.insert_ingredient(ingredient, position, recipe_id, cur)
@@ -97,4 +104,17 @@ def _recipe_from_row(row: DictRow) -> RecipeFull:
         cover_image=cover_image_asset_url,
         cover_thumbnail=cover_thumbnail_asset_url,
         note=row['note']
+    )
+
+
+def _recipe_light_from_row(row: DictRow) -> RecipeLight:
+    return RecipeLight(
+        id=row['id'],
+        collection=row['collection'],
+        slug=row['slug'],
+        title=row['title'],
+        description=row['description'],
+        liked=row['liked'],
+        created_at=row['created_at'],
+        updated_at=row['updated_at'],
     )

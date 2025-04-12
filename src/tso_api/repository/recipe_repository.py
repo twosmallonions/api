@@ -64,17 +64,6 @@ WHERE cm."user" = %s"""
     return await (await cur.execute(query, (user_id,))).fetchall()
 
 
-def __recipe_light_from_row(row: DictRow) -> RecipeLight:
-    return RecipeLight(
-        id=row['id'],
-        collection=row['collection'],
-        slug=row['slug'],
-        title=row['title'],
-        description=row['description'],
-        liked=row['liked'],
-        created_at=row['created_at'],
-        updated_at=row['updated_at'],
-    )
 
 
 async def update_cover_image(

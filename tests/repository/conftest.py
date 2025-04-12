@@ -6,6 +6,7 @@ import subprocess
 import uuid
 from collections.abc import Awaitable, Callable, Generator
 
+import psycopg
 import pytest
 from psycopg import AsyncConnection, AsyncCursor, Rollback
 from psycopg.rows import DictRow, dict_row
@@ -38,6 +39,7 @@ def setup_db() -> Generator[str]:
     if dbmate_path is None:
         raise Exception("dbmate not found")
     subprocess.run([dbmate_path, '-u', db_url, 'up'], check=True)
+
     yield db_url
     postgres.stop()
 
@@ -54,7 +56,10 @@ async def db_pool(setup_db: str):
 async def conn(db_pool: AsyncConnectionPool):
     async with db_pool.connection() as conn, conn.transaction():
         yield conn
-        raise Rollback
+
+@pytest.fixture
+async def raw_conn(setup_db: str):
+    return await psycopg.AsyncConnection.connect(setup_db)
 
 
 @pytest.fixture
