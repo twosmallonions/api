@@ -5,7 +5,7 @@ from psycopg_pool import AsyncConnectionPool
 
 from tso_api.models.user import User
 from tso_api.repository import collection_repository, user_repository
-from tso_api.service.base_service import BaseService, NoneAfterInsertError, ResourceNotFoundError
+from tso_api.service.base_service import BaseService
 
 
 class UserService(BaseService):
@@ -17,11 +17,8 @@ class UserService(BaseService):
             res = await user_repository.get_user(subject, issuer, cur)
             if res is None:
                 res = await user_repository.create_user(subject, issuer, cur)
-                if res is None:
-                    msg = 'user'
-                    raise NoneAfterInsertError(msg) from None
 
-                coll_id = await collection_repository.new_collection('Default', cur)
+                coll_id = (await collection_repository.new_collection('Default', cur))['id']
                 await collection_repository.add_collection_member(coll_id, res['id'], cur)
 
         return _user_from_row(res)

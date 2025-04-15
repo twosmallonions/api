@@ -28,9 +28,9 @@ class CollectionService(BaseService):
 
         return _collection_from_row(res)
 
-    async def get_collections_for_user(self, user: User) -> list[CollectionFull]:
+    async def get_collections_for_user(self) -> list[CollectionFull]:
         async with self.begin() as cur:
-            rows = await collection_repository.get_collections_for_user(user.id, cur)
+            rows = await collection_repository.get_collections_for_user(cur)
 
         return [_collection_from_row(row) for row in rows]
 
@@ -41,7 +41,5 @@ class CollectionService(BaseService):
 
 def _collection_from_row(row: DictRow) -> CollectionFull:
     return CollectionFull(
-        name=row['name'], id=row['id'], slug=row['slug'], created_at=row['created_at'], updated_at=row['updated_at']
+        name=row['name'], id=row['id'], created_at=row['created_at'], updated_at=row['updated_at']
     )
-
-

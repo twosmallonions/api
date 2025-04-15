@@ -8,13 +8,6 @@ class ServiceError(Exception):
     pass
 
 
-class NoneAfterInsertError(ServiceError):
-    msg = '{} was inserted but returned None'
-
-    def __init__(self, resource: str) -> None:
-        super().__init__(self.msg.format(resource))
-
-
 class ResourceNotFoundError(Exception):
     msg: str = 'resource not found: {0}'
     resource: str

@@ -4,10 +4,11 @@ from typing import Any
 from uuid import UUID
 
 import pytest
-from psycopg import AsyncCursor
+from psycopg import AsyncConnection, AsyncCursor
 from psycopg.errors import IntegrityError
-from psycopg.rows import DictRow
+from psycopg.rows import DictRow, dict_row
 
+from tests.repository.conftest import AsciiLetterString
 from tso_api.models.recipe import RecipeCreate, RecipeUpdate
 from tso_api.models.user import User
 from tso_api.repository import recipe_repository
@@ -57,32 +58,40 @@ def compare_recipe_with_recipe_update(recipe: dict[str, Any], recipe_update: Rec
     assert recipe['total_time'] == (recipe_update.cook_time or 0) + (recipe_update.prep_time or 0)
 
 
-async def test_create_recipe(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
-    print(id(cur))
+async def set_perms(user_id: UUID, cur: AsyncCursor[DictRow]):
+    await cur.execute('SET LOCAL ROLE tso_api_user')
+    await cur.execute('SELECT tso.set_uid(%s)', (user_id, ))
+
+
+async def test_create_recipe(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], raw_conn: AsyncConnection):
     user, coll = user_col
     recipe_create = recipe_create_fn()
-    recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
+    recipe_create.recipe_yield = None
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user.id, cur)
+        recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
 
-    recipe = await (await cur.execute('SELECT * FROM recipes WHERE id = %s', (recipe_id, ))).fetchone()
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        recipe = await (await cur.execute('SELECT * FROM tso.recipe WHERE id = %s', (recipe_id, ))).fetchone()
 
     assert recipe
-    assert recipe['collection'] == coll
+    assert recipe['collection_id'] == coll
     assert recipe['created_by'] == user.id
     assert recipe['title'] == recipe_create.title
 
 
-async def test_create_recipe_empty_title(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
-
-    print(id(cur))
+@pytest.mark.parametrize('title_length', [0, 300, 500])
+async def test_create_recipe_title_length(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], ascii_letter_string: AsciiLetterString, title_length: int, raw_conn: AsyncConnection):
     user, coll = user_col
     recipe_create = recipe_create_fn()
-    recipe_create.title = ''
-    with pytest.raises(IntegrityError):
-        await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user.id, cur)
+        recipe_create.title = ascii_letter_string(title_length)
+        with pytest.raises(IntegrityError):
+             await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
 
 
 async def test_get_recipe_by_id(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
-    print(id(cur))
     user, coll = user_col
     recipe_create = recipe_create_fn()
     recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
@@ -96,7 +105,6 @@ async def test_get_recipe_by_id(recipe_create_fn: RecipeCreateFn, user_col: tupl
 
 
 async def test_update_recipe(recipe_create_fn: RecipeCreateFn, recipe_update: RecipeUpdate, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
-    print(id(cur))
     user, coll = user_col
     recipe_create = recipe_create_fn()
     recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)

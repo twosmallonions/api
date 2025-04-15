@@ -57,6 +57,7 @@ async def conn(db_pool: AsyncConnectionPool):
     async with db_pool.connection() as conn, conn.transaction():
         yield conn
 
+
 @pytest.fixture
 async def raw_conn(setup_db: str):
     return await psycopg.AsyncConnection.connect(setup_db)
@@ -92,15 +93,14 @@ def user_col_fn(user: UserFn) -> UserColFn:
 
     async def __create(cur: AsyncCursor[DictRow]) -> tuple[User, uuid.UUID]:
         user = await user_fn(cur)
-        await collection_repository.new_collection("Default", cur)
-        coll = await collection_repository.get_collection_by_name("Default", cur)
-        assert coll
-        await collection_repository.add_collection_member(coll['id'], user.id, cur)
+        coll = await collection_repository.new_collection("Default", cur)
+        await collection_repository.add_collection_owner(coll['id'], user.id, cur)
         return (user, coll['id'])
 
     return __create
 
 
 @pytest.fixture
-async def user_col(user_col_fn: UserColFn, cur: AsyncCursor[DictRow]):
-    return await user_col_fn(cur)
+async def user_col(user_col_fn: UserColFn, raw_conn: AsyncConnection):
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        return await user_col_fn(cur)

@@ -53,7 +53,6 @@ class RecipeUpdate(Recipe):
 
 class RecipeFull(Recipe, Timestamps):
     id: UUID
-    slug: str
     total_time: int | None = None
     last_made: datetime | None
     instructions: list[Instruction] = Field(default_factory=list)
@@ -67,7 +66,6 @@ class RecipeFull(Recipe, Timestamps):
 class RecipeLight(Timestamps):
     id: UUID
     collection: UUID
-    slug: str
     title: str
     description: str | None
     liked: bool

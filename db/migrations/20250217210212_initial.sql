@@ -1,8 +1,13 @@
 -- migrate:up
-
 CREATE ROLE tso_api_user;
 CREATE SCHEMA tso;
 GRANT usage ON SCHEMA tso TO tso_api_user;
+
+ALTER DEFAULT PRIVILEGES 
+  IN SCHEMA tso
+  GRANT SELECT, INSERT, UPDATE
+  ON TABLES
+  TO tso_api_user;
 
 CREATE FUNCTION tso.set_uid(user_id uuid) RETURNS VOID 
 AS $$
@@ -26,10 +31,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TABLE tso.users (
+CREATE TABLE tso.account (
     id UUID PRIMARY KEY,
-    subject VARCHAR(1000) NOT NULL,
-    issuer VARCHAR(1000) NOT NULL,
+    subject TEXT NOT NULL,
+    issuer TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (subject, issuer),
@@ -37,14 +42,13 @@ CREATE TABLE tso.users (
     CHECK (length(issuer) > 0)
 );
 
-CREATE TRIGGER tso_users_update_updated_at BEFORE UPDATE
-    ON tso.users 
+CREATE TRIGGER tso_account_update_updated_at BEFORE UPDATE
+    ON tso.account 
     FOR EACH ROW
     EXECUTE FUNCTION tso.update_updated_at();
 
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON tso.users TO tso_api_user;
 
-CREATE INDEX ON tso.users USING hash (subject);
-CREATE INDEX ON tso.users USING hash (issuer);
+CREATE INDEX ON tso.account USING hash (subject);
+CREATE INDEX ON tso.account USING hash (issuer);
 -- migrate:down

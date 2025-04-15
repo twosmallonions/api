@@ -1,22 +1,22 @@
 -- migrate:up
 CREATE TABLE shopping_lists (
     id uuid PRIMARY KEY,
-    owner varchar NOT NULL,
-    title varchar(1000) NOT NULL,
+    owner TEXT NOT NULL,
+    title TEXT NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE list_entries (
     id uuid PRIMARY KEY,
-    name varchar(500) NOT NULL,
-    note varchar(5000) NOT NULL DEFAULT '',
+    name TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     shopping_list uuid REFERENCES shopping_lists (id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
     completed boolean NOT NULL DEFAULT false,
     completed_at timestamptz,
-    owner varchar NOT NULL
+    owner TEXT NOT NULL
 );
 
 CREATE VIEW shopping_lists_with_entries AS

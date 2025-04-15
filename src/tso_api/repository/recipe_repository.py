@@ -11,7 +11,6 @@ SELECT
     r.id,
     r.collection,
     r.title,
-    r.slug,
     r.created_at,
     r.updated_at,
     r.cook_time,
@@ -52,7 +51,6 @@ async def get_recipes_light_by_owner(user_id: UUID, cur: AsyncCursor[DictRow]):
     query = """SELECT
     r.id,
     r.collection,
-    r.slug,
     r.title,
     r.created_at,
     r.updated_at,
@@ -62,8 +60,6 @@ LEFT JOIN collection_members cm
 ON cm.collection = r.collection
 WHERE cm."user" = %s"""
     return await (await cur.execute(query, (user_id,))).fetchall()
-
-
 
 
 async def update_cover_image(
@@ -88,7 +84,6 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
     query = """UPDATE recipes
     SET
         title = %(title)s,
-        slug = %(slug)s,
         note = %(note)s,
         cook_time = %(cook_time)s,
         prep_time = %(prep_time)s,
@@ -101,7 +96,6 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
         query,
         {
             'title': recipe.title,
-            'slug': recipe.title.lower(),
             'note': recipe.note,
             'cook_time': recipe.cook_time,
             'prep_time': recipe.prep_time,
@@ -113,9 +107,9 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
 
 
 async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]) -> UUID:
-    query = """INSERT INTO recipes
-    (id, collection, created_by, title, slug, cook_time, prep_time, yield, liked, note)
-    VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(slug)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s)"""
+    query = """INSERT INTO tso.recipe
+    (id, collection_id, created_by, title, cook_time, prep_time, yield, liked, note)
+    VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s)"""
 
     recipe_id = uuid6.uuid7()
     _ = await cur.execute(
@@ -125,7 +119,6 @@ async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: U
             'collection': collection_id,
             'created_by': created_by,
             'title': recipe.title,
-            'slug': recipe.title.lower(),
             'note': recipe.note,
             'cook_time': recipe.cook_time,
             'prep_time': recipe.prep_time,

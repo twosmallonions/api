@@ -90,7 +90,6 @@ def _recipe_from_row(row: DictRow) -> RecipeFull:
         collection=row['collection'],
         created_by=row['created_by'],
         title=row['title'],
-        slug=row['slug'],
         created_at=row['created_at'],
         updated_at=row['updated_at'],
         cook_time=row['cook_time'],
@@ -111,7 +110,6 @@ def _recipe_light_from_row(row: DictRow) -> RecipeLight:
     return RecipeLight(
         id=row['id'],
         collection=row['collection'],
-        slug=row['slug'],
         title=row['title'],
         description=row['description'],
         liked=row['liked'],

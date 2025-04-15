@@ -14,7 +14,6 @@ class CollectionCreate(CollectionBase):
 
 class CollectionFull(CollectionBase, Timestamps):
     id: UUID
-    slug: str
 
 
 class CollectionMember(TSOBase):
