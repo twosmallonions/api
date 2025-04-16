@@ -1,5 +1,5 @@
 -- migrate:up
-CREATE TABLE tso.assets (
+CREATE TABLE tso.asset (
     id UUID PRIMARY KEY,
     path text NOT NULL CHECK (length(path) <= 4096),
     size INTEGER NOT NULL,
@@ -7,6 +7,8 @@ CREATE TABLE tso.assets (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     collection_id UUID NOT NULL REFERENCES tso.collection (id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
+
+CREATE INDEX ON tso.asset (collection_id);
 
 CREATE TABLE tso.recipe (
     id uuid PRIMARY KEY,
@@ -24,16 +26,19 @@ CREATE TABLE tso.recipe (
     yield TEXT CHECK(length(yield) < 100),
     last_made timestamptz,
     liked bool NOT NULL DEFAULT false,
-    cover_image uuid REFERENCES tso.assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    cover_thumbnail uuid REFERENCES tso.assets (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CHECK (length(title) > 0)
+    cover_image uuid REFERENCES tso.asset (id) ON DELETE SET NULL ON UPDATE RESTRICT,
+    cover_thumbnail uuid REFERENCES tso.asset (id) ON DELETE SET NULL ON UPDATE RESTRICT
 );
+
+CREATE INDEX ON tso.recipe (collection_id);
+CREATE INDEX ON tso.recipe (cover_image);
+CREATE INDEX ON tso.recipe (cover_thumbnail);
 
 ALTER TABLE tso.recipe ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY allow_for_collection_member ON tso.recipe
 FOR ALL
-USING(tso.current_user_is_collection_member(collection_id));
+USING(collection_id IN (SELECT collection_id FROM tso.get_collections_for_user()));
 
 CREATE FUNCTION tso.current_user_has_permission_for_recipe(target_recipe_id UUID) RETURNS BOOLEAN
 AS $$

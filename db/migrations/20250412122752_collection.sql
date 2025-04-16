@@ -40,34 +40,25 @@ CREATE CONSTRAINT TRIGGER insert_collection_ensure_owner AFTER INSERT
   EXECUTE FUNCTION tso.new_collection_ensure_owner();
 
 -- policy functions
-CREATE FUNCTION tso.current_user_is_collection_member(target_collection_id UUID) RETURNS BOOLEAN
-AS $$
-BEGIN
-  RETURN target_collection_id IN (SELECT collection_id FROM tso.collection_member WHERE account_id = tso.get_current_user_id());
-END;
-$$
-LANGUAGE plpgsql
+CREATE FUNCTION tso.get_collections_for_user() RETURNS TABLE(collection_id UUID)
+AS $$ SELECT DISTINCT collection_id FROM tso.collection_member WHERE account_id = tso.get_current_user_id(); $$
+LANGUAGE SQL
 SECURITY DEFINER
+STABLE
 SET search_path = tso;
 
-CREATE FUNCTION tso.current_user_is_collection_owner(target_collection_id UUID) RETURNS BOOLEAN
-AS $$
-BEGIN
-  RETURN (target_collection_id IN (SELECT collection_id FROM tso.collection_member WHERE account_id = tso.get_current_user_id() AND owner = true));
-END;
-$$
-LANGUAGE plpgsql
+CREATE FUNCTION tso.get_owner_collections_for_user() RETURNS TABLE(collection_id UUID)
+AS $$ SELECT collection_id FROM tso.collection_member WHERE account_id = tso.get_current_user_id() AND owner = true; $$
+LANGUAGE sql
 SECURITY DEFINER
+STABLE
 SET search_path = tso;
 
-CREATE FUNCTION tso.collection_has_no_members(target_collection_id UUID) RETURNS BOOLEAN
-AS $$
-BEGIN
-  RETURN COUNT(*) = 0 FROM tso.collection_member WHERE collection_id = target_collection_id;
-END;
-$$
-LANGUAGE plpgsql
+CREATE FUNCTION tso.get_collections_with_no_members() RETURNS TABLE(collection_id UUID)
+AS $$ SELECT DISTINCT collection_id FROM tso.collection_member $$
+LANGUAGE sql
 SECURITY DEFINER
+STABLE
 SET search_path = tso;
 
 -- RLS collections table
@@ -75,11 +66,17 @@ ALTER TABLE tso.collection ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY allow_read_for_collection_members ON tso.collection
 FOR SELECT
-USING (tso.current_user_is_collection_member(id) OR tso.collection_has_no_members(id));
+USING (
+  id IN (SELECT collection_id FROM tso.get_collections_for_user()) 
+  OR 
+  id NOT IN (SELECT collection_id FROM tso.get_collections_with_no_members())
+);
 
 CREATE POLICY allow_update_for_collection_members ON tso.collection
 FOR UPDATE
-USING (tso.current_user_is_collection_owner(id));
+USING (
+  id IN (SELECT collection_id FROM tso.get_owner_collections_for_user())
+);
 
 CREATE POLICY allow_write_collections ON tso.collection
 FOR INSERT
@@ -90,10 +87,14 @@ ALTER TABLE tso.collection_member ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY allow_read_for_collection_members ON tso.collection_member
 FOR SELECT
-USING (tso.current_user_is_collection_member(collection_id));
+USING (collection_id IN (SELECT collection_id FROM tso.get_collections_for_user()));
 
 CREATE POLICY allow_insert ON tso.collection_member
 FOR INSERT
-WITH CHECK (tso.collection_has_no_members(collection_id) OR tso.current_user_is_collection_owner(collection_id));
+WITH CHECK (
+  collection_id NOT IN (SELECT collection_id FROM tso.get_collections_with_no_members())
+  OR 
+  collection_id IN (SELECT collection_id FROM tso.get_owner_collections_for_user())
+);
 
 -- migrate:down
