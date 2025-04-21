@@ -1,3 +1,6 @@
+# Copyright 2025 Marius Meschter
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from tso_api.db import db_pool
 from tso_api.service.collection_service import CollectionService
 from tso_api.service.recipe_service import RecipeService

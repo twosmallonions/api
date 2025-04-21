@@ -1,3 +1,6 @@
+# Copyright 2025 Marius Meschter
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 from uuid6 import uuid7

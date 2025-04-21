@@ -1,3 +1,6 @@
+# Copyright 2025 Marius Meschter
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from functools import cached_property
 from typing import Annotated, final
 

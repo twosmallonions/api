@@ -1,3 +1,6 @@
+# Copyright 2025 Marius Meschter
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from contextlib import asynccontextmanager
 
 from psycopg.rows import dict_row

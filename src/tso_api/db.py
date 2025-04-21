@@ -1,3 +1,6 @@
+# Copyright 2025 Marius Meschter
+# SPDX-License-Identifier: AGPL-3.0-only
+
 from psycopg_pool import AsyncConnectionPool
 
 from tso_api.config import settings
