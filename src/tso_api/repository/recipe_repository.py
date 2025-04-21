@@ -8,45 +8,8 @@ import uuid6
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 
-from tso_api.models.recipe import RecipeCreate, RecipeLight, RecipeUpdate
-from tso_api.repository import NoneAfterInsertError
-
-SELECT_FULL_RECIPE_QUERY = """
-SELECT
-    r.id,
-    r.collection_id,
-    r.title,
-    r.created_at,
-    r.updated_at,
-    r.cook_time,
-    r.prep_time,
-    r.total_time,
-    r.yield,
-    r.last_made,
-    r.liked,
-    r.created_by,
-    r.note,
-    (
-        SELECT
-            array_agg(
-                json_build_object('text', ins.text, 'id', ins.id)
-                ORDER BY ins.position
-            )
-        FROM tso.instruction AS ins
-        WHERE ins.recipe_id = r.id
-    ) AS instructions,
-    (
-        SELECT
-            array_agg(
-                json_build_object('text', ing.text, 'id', ing.id)
-                ORDER BY ing.position
-            )
-        FROM tso.ingredient AS ing
-        WHERE ing.recipe_id = r.id
-    ) AS ingredients,
-    ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_image ) AS cover_image,
-    ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_thumbnail ) AS cover_thumbnail
-FROM tso.recipe AS r"""
+from tso_api.models.recipe import RecipeCreate, RecipeUpdate
+from tso_api.repository import NoneAfterInsertError, NoneAfterUpdateError
 
 
 async def get_recipes_light_by_owner(user_id: UUID, cur: AsyncCursor[DictRow]):
@@ -57,10 +20,7 @@ async def get_recipes_light_by_owner(user_id: UUID, cur: AsyncCursor[DictRow]):
     r.created_at,
     r.updated_at,
     r.liked
-FROM recipes r
-LEFT JOIN collection_members cm
-ON cm.collection = r.collection
-WHERE cm."user" = %s"""
+FROM recipes r"""
     return await (await cur.execute(query, (user_id,))).fetchall()
 
 
@@ -83,18 +43,18 @@ async def update_liked(liked: bool, recipe_id: UUID, cur: AsyncCursor[DictRow]):
 
 
 async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[DictRow]):
-    query = """UPDATE recipes
+    query = """UPDATE tso.recipe
     SET
         title = %(title)s,
         note = %(note)s,
         cook_time = %(cook_time)s,
         prep_time = %(prep_time)s,
         yield = %(yield)s,
-        liked = %(liked)s,
-        updated_at = now()
+        liked = %(liked)s
     WHERE
-        id = %(id)s"""
-    await cur.execute(
+        id = %(id)s
+    RETURNING *"""
+    res = await (await cur.execute(
         query,
         {
             'title': recipe.title,
@@ -105,8 +65,13 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
             'liked': recipe.liked,
             'id': recipe_id,
         },
-    )
+    )).fetchone()
 
+    if res is None:
+        msg = 'recipe'
+        raise NoneAfterUpdateError(msg, recipe_id)
+
+    return res
 
 async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]) -> dict[str, Any]:
     query = """INSERT INTO tso.recipe
@@ -138,4 +103,39 @@ async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: U
 
 
 async def get_recipe_by_id(recipe_id: UUID, user_id: UUID, cur: AsyncCursor[DictRow]):
-    return await (await cur.execute(SELECT_FULL_RECIPE_QUERY, {'user_id': user_id, 'id': recipe_id})).fetchone()
+    query = """SELECT
+        r.id,
+        r.collection_id,
+        r.title,
+        r.created_at,
+        r.updated_at,
+        r.cook_time,
+        r.prep_time,
+        r.total_time,
+        r.yield,
+        r.last_made,
+        r.liked,
+        r.created_by,
+        r.note,
+        (
+            SELECT
+                array_agg(
+                    json_build_object('text', ins.text, 'id', ins.id)
+                    ORDER BY ins.position
+                )
+            FROM tso.instruction AS ins
+            WHERE ins.recipe_id = r.id
+        ) AS instructions,
+        (
+            SELECT
+                array_agg(
+                    json_build_object('text', ing.text, 'id', ing.id)
+                    ORDER BY ing.position
+                )
+            FROM tso.ingredient AS ing
+            WHERE ing.recipe_id = r.id
+        ) AS ingredients,
+        ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_image ) AS cover_image,
+        ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_thumbnail ) AS cover_thumbnail
+    FROM tso.recipe AS r"""
+    return await (await cur.execute(query, {'user_id': user_id, 'id': recipe_id})).fetchone()

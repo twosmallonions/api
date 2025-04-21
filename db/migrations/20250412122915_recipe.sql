@@ -43,14 +43,11 @@ CREATE POLICY allow_for_collection_member ON tso.recipe
 FOR ALL
 USING(collection_id IN (SELECT collection_id FROM tso.get_collections_for_user()));
 
-CREATE FUNCTION tso.current_user_has_permission_for_recipe(target_recipe_id UUID) RETURNS BOOLEAN
-AS $$
-BEGIN
-  RETURN COUNT(*) = 0 FROM tso.recipe WHERE id = target_recipe_id;
-END;
-$$
-LANGUAGE plpgsql
+CREATE FUNCTION tso.get_recipes_for_user() RETURNS TABLE(recipe_id UUID)
+AS $$ SELECT DISTINCT id FROM tso.recipe $$
+LANGUAGE sql
 SECURITY INVOKER
+STABLE
 SET search_path = tso;
 
 CREATE TABLE tso.instruction (
@@ -68,7 +65,7 @@ ALTER TABLE tso.instruction ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY allow_for_recipe_access ON tso.instruction
 FOR ALL
-USING(tso.current_user_has_permission_for_recipe(recipe_id));
+USING(recipe_id IN (SELECT recipe_id FROM tso.get_recipes_for_user()));
 
 CREATE TABLE tso.ingredient (
     id uuid PRIMARY KEY,
@@ -85,6 +82,6 @@ ALTER TABLE tso.ingredient ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY allow_for_recipe_access ON tso.ingredient
 FOR ALL
-USING(tso.current_user_has_permission_for_recipe(recipe_id));
+USING(recipe_id IN (SELECT recipe_id FROM tso.get_recipes_for_user()));
 -- migrate:down
 

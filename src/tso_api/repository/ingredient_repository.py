@@ -3,9 +3,9 @@
 
 from uuid import UUID
 
+import uuid6
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
-import uuid6
 
 
 async def insert_ingredient(text: str, position: int, recipe_id: UUID, cur: AsyncCursor[DictRow]):

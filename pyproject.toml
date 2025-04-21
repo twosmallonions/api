@@ -26,7 +26,8 @@ build-backend = "hatchling.build"
 addopts = [
     "--import-mode=importlib",
 ]
-asyncio_default_fixture_loop_scope = "package"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
 asyncio_mode = "auto"
 markers = ['collections']
 
