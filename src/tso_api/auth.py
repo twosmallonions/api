@@ -71,18 +71,15 @@ class OIDCAuth:
     def __call__(self, authorization: Annotated[str | None, Header()] = None) -> JWT:
         if authorization is None:
             msg = 'no authorization header'
-            print(msg)
             raise AuthenticationError(msg)
 
         split = authorization.split(' ', 1)
         if len(split) != AUTHORIZATION_HEADER_PARTS:
             msg = 'invalid authorization header'
-            print(msg)
             raise AuthenticationError(msg)
 
         if split[0] != 'Bearer':
             msg = 'invalid authorization scheme'
-            print(msg)
             raise AuthenticationError(msg)
 
         token = split[1]
@@ -103,13 +100,10 @@ class OIDCAuth:
                 leeway=20,
             )
         except InvalidKeyError as e:
-            print(e)
             raise AuthenticationError(str(e), 'invalid_token', 'invalid signing key') from None
         except ExpiredSignatureError as e:
-            print(e)
             raise AuthenticationError(str(e), 'invalid_token', 'token expired') from None
         except InvalidTokenError as e:
-            print(e)
             raise AuthenticationError(str(e), 'invalid_token', 'token invalid') from None
 
         return JWT.model_validate(verified_jwt)
