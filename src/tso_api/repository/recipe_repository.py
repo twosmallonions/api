@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 import uuid6
@@ -5,11 +6,12 @@ from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 
 from tso_api.models.recipe import RecipeCreate, RecipeLight, RecipeUpdate
+from tso_api.repository import NoneAfterInsertError
 
 SELECT_FULL_RECIPE_QUERY = """
 SELECT
     r.id,
-    r.collection,
+    r.collection_id,
     r.title,
     r.created_at,
     r.updated_at,
@@ -27,8 +29,8 @@ SELECT
                 json_build_object('text', ins.text, 'id', ins.id)
                 ORDER BY ins.position
             )
-        FROM instructions AS ins
-        WHERE ins.recipe = r.id
+        FROM tso.instruction AS ins
+        WHERE ins.recipe_id = r.id
     ) AS instructions,
     (
         SELECT
@@ -36,15 +38,12 @@ SELECT
                 json_build_object('text', ing.text, 'id', ing.id)
                 ORDER BY ing.position
             )
-        FROM ingredients AS ing
-        WHERE ing.recipe = r.id
+        FROM tso.ingredient AS ing
+        WHERE ing.recipe_id = r.id
     ) AS ingredients,
-    ( SELECT assets.id FROM assets WHERE assets.id = r.cover_image ) AS cover_image,
-    ( SELECT assets.id FROM assets WHERE assets.id = r.cover_thumbnail ) AS cover_thumbnail
-FROM recipes AS r
-LEFT JOIN collection_members cm
-ON cm.collection = r.collection
-WHERE cm."user" = %(user_id)s AND r.id = %(id)s"""
+    ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_image ) AS cover_image,
+    ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_thumbnail ) AS cover_thumbnail
+FROM tso.recipe AS r"""
 
 
 async def get_recipes_light_by_owner(user_id: UUID, cur: AsyncCursor[DictRow]):
@@ -106,13 +105,14 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
     )
 
 
-async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]) -> UUID:
+async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]) -> dict[str, Any]:
     query = """INSERT INTO tso.recipe
     (id, collection_id, created_by, title, cook_time, prep_time, yield, liked, note)
-    VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s)"""
+    VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s)
+    RETURNING *"""
 
     recipe_id = uuid6.uuid7()
-    _ = await cur.execute(
+    res = await (await cur.execute(
         query,
         {
             'id': recipe_id,
@@ -125,9 +125,13 @@ async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: U
             'yield': recipe.recipe_yield,
             'liked': recipe.liked,
         },
-    )
+    )).fetchone()
 
-    return recipe_id
+    if res is None:
+        msg = 'recipe'
+        raise NoneAfterInsertError(msg)
+
+    return res
 
 
 async def get_recipe_by_id(recipe_id: UUID, user_id: UUID, cur: AsyncCursor[DictRow]):

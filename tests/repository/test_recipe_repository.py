@@ -5,13 +5,13 @@ from uuid import UUID
 
 import pytest
 from psycopg import AsyncConnection, AsyncCursor
-from psycopg.errors import IntegrityError
+from psycopg.errors import InsufficientPrivilege, IntegrityError
 from psycopg.rows import DictRow, dict_row
 
-from tests.repository.conftest import AsciiLetterString
+from tests.repository.conftest import AsciiLetterString, UserFn
 from tso_api.models.recipe import RecipeCreate, RecipeUpdate
 from tso_api.models.user import User
-from tso_api.repository import recipe_repository
+from tso_api.repository import collection_repository, recipe_repository
 
 RecipeCreateFn = Callable[[], RecipeCreate]
 
@@ -63,21 +63,30 @@ async def set_perms(user_id: UUID, cur: AsyncCursor[DictRow]):
     await cur.execute('SELECT tso.set_uid(%s)', (user_id, ))
 
 
-async def test_create_recipe(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], raw_conn: AsyncConnection):
-    user, coll = user_col
+async def create_recipe(user: User, coll_id: UUID, recipe_create_fn: RecipeCreateFn, cur: AsyncCursor[DictRow]) -> tuple[dict[str, Any], RecipeCreate]:
     recipe_create = recipe_create_fn()
     recipe_create.recipe_yield = None
-    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
-        await set_perms(user.id, cur)
-        recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
+    await set_perms(user.id, cur)
+    return await recipe_repository.create_recipe(recipe_create, coll_id, user.id, cur), recipe_create
 
-    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
-        recipe = await (await cur.execute('SELECT * FROM tso.recipe WHERE id = %s', (recipe_id, ))).fetchone()
-
+def verify_recipe(recipe: DictRow | None, coll: UUID, created_by: User, recipe_create: RecipeCreate):
     assert recipe
     assert recipe['collection_id'] == coll
-    assert recipe['created_by'] == user.id
+    assert recipe['created_by'] == created_by.id
     assert recipe['title'] == recipe_create.title
+
+
+async def test_create_recipe(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], raw_conn: AsyncConnection):
+    user, coll = user_col
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user.id, cur)
+        recipe, recipe_create = await create_recipe(user, coll, recipe_create_fn, cur)
+
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        recipe = await (await cur.execute('SELECT * FROM tso.recipe WHERE id = %s', (recipe['id'], ))).fetchone()
+
+    verify_recipe(recipe, coll, user, recipe_create)
+
 
 
 @pytest.mark.parametrize('title_length', [0, 300, 500])
@@ -90,18 +99,54 @@ async def test_create_recipe_title_length(recipe_create_fn: RecipeCreateFn, user
         with pytest.raises(IntegrityError):
              await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
 
+async def test_collection_members_can_add_recipes(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], user: UserFn, raw_conn: AsyncConnection):
+    _, coll = user_col
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        second_user = await user(cur)
+        await collection_repository.add_collection_member(coll, second_user.id, cur)
 
-async def test_get_recipe_by_id(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(second_user.id, cur)
+        recipe, recipe_create = await create_recipe(second_user, coll, recipe_create_fn, cur)
+    
+    verify_recipe(recipe, coll, second_user, recipe_create)
+
+async def test_non_collection_members_cant_add_recipes(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], user: UserFn, raw_conn: AsyncConnection):
+    _, coll = user_col
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        second_user = await user(cur)
+
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(second_user.id, cur)
+        with pytest.raises(InsufficientPrivilege):
+            await create_recipe(second_user, coll, recipe_create_fn, cur)
+
+async def test_get_recipe_by_id(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], raw_conn: AsyncConnection):
     user, coll = user_col
-    recipe_create = recipe_create_fn()
-    recipe_id = await recipe_repository.create_recipe(recipe_create, coll, user.id, cur)
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user.id, cur)
+        created_recipe, recipe_create = await create_recipe(user, coll, recipe_create_fn, cur)
 
-    recipe = await recipe_repository.get_recipe_by_id(recipe_id, user.id, cur)
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user.id, cur)
+        recipe = await recipe_repository.get_recipe_by_id(created_recipe['id'], user.id, cur)
 
-    assert recipe
-    assert recipe['collection'] == coll
-    assert recipe['created_by'] == user.id
-    assert recipe['title'] == recipe_create.title
+    verify_recipe(recipe, coll, user, recipe_create)
+
+async def test_collection_member_can_read_recipes_in_collection(recipe_create_fn: RecipeCreateFn, user_col: tuple[User, UUID], user: UserFn, raw_conn: AsyncConnection):
+    u, coll = user_col
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        second_user = await user(cur)
+        await set_perms(u.id, cur)
+        await collection_repository.add_collection_member(coll, second_user.id, cur)
+        created_recipe, recipe_create = await create_recipe(u, coll, recipe_create_fn, cur)
+
+    async with raw_conn.transaction(), raw_conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(second_user.id, cur)
+        recipe = await recipe_repository.get_recipe_by_id(created_recipe['id'], u.id, cur)
+
+    verify_recipe(recipe, coll, u, recipe_create)
+
 
 
 async def test_update_recipe(recipe_create_fn: RecipeCreateFn, recipe_update: RecipeUpdate, user_col: tuple[User, UUID], cur: AsyncCursor[DictRow]):
