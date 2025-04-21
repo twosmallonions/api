@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 from datetime import datetime
+
 import humps
 from pydantic import BaseModel, ConfigDict
 

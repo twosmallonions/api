@@ -1,7 +1,6 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from typing import Any
 from uuid import UUID
 
 import uuid6
@@ -12,7 +11,7 @@ from tso_api.models.recipe import RecipeCreate, RecipeUpdate
 from tso_api.repository import NoneAfterInsertError, NoneAfterUpdateError
 
 
-async def get_recipes_light_by_owner(user_id: UUID, cur: AsyncCursor[DictRow]):
+async def get_recipes_light_by_owner(cur: AsyncCursor[DictRow]):
     query = """SELECT
     r.id,
     r.collection,
@@ -21,7 +20,7 @@ async def get_recipes_light_by_owner(user_id: UUID, cur: AsyncCursor[DictRow]):
     r.updated_at,
     r.liked
 FROM recipes r"""
-    return await (await cur.execute(query, (user_id,))).fetchall()
+    return await (await cur.execute(query)).fetchall()
 
 
 async def update_cover_image(
@@ -73,7 +72,8 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
 
     return res
 
-async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]) -> dict[str, Any]:
+
+async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]):
     query = """INSERT INTO tso.recipe
     (id, collection_id, created_by, title, cook_time, prep_time, yield, liked, note)
     VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s)
@@ -102,7 +102,7 @@ async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: U
     return res
 
 
-async def get_recipe_by_id(recipe_id: UUID, user_id: UUID, cur: AsyncCursor[DictRow]):
+async def get_recipe_by_id(recipe_id: UUID, cur: AsyncCursor[DictRow]):
     query = """SELECT
         r.id,
         r.collection_id,
@@ -137,5 +137,6 @@ async def get_recipe_by_id(recipe_id: UUID, user_id: UUID, cur: AsyncCursor[Dict
         ) AS ingredients,
         ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_image ) AS cover_image,
         ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_thumbnail ) AS cover_thumbnail
-    FROM tso.recipe AS r"""
-    return await (await cur.execute(query, {'user_id': user_id, 'id': recipe_id})).fetchone()
+    FROM tso.recipe AS r
+    WHERE r.id = %s"""
+    return await (await cur.execute(query, (recipe_id, ))).fetchone()

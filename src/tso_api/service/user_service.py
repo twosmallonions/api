@@ -16,13 +16,13 @@ class UserService(BaseService):
         super().__init__(pool)
 
     async def get_or_create_user(self, subject: str, issuer: str):
-        async with self.begin() as cur:
+        async with self._begin_unsafe() as cur:
             res = await user_repository.get_user(subject, issuer, cur)
             if res is None:
                 res = await user_repository.create_user(subject, issuer, cur)
 
                 coll_id = (await collection_repository.new_collection('Default', cur))['id']
-                await collection_repository.add_collection_member(coll_id, res['id'], cur)
+                await collection_repository.add_collection_owner(coll_id, res['id'], cur)
 
         return _user_from_row(res)
 

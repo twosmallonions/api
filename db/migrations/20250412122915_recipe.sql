@@ -33,6 +33,11 @@ CREATE TABLE tso.recipe (
     cover_thumbnail uuid REFERENCES tso.asset (id) ON DELETE SET NULL ON UPDATE RESTRICT
 );
 
+CREATE TRIGGER tso_recipe_update_updated_at BEFORE UPDATE
+  ON tso.recipe
+  FOR EACH ROW
+  EXECUTE FUNCTION tso.update_updated_at();
+
 CREATE INDEX ON tso.recipe (collection_id);
 CREATE INDEX ON tso.recipe (cover_image);
 CREATE INDEX ON tso.recipe (cover_thumbnail);

@@ -13,6 +13,7 @@ from tso_api.auth import AuthenticationError
 from tso_api.config import settings
 from tso_api.db import db_pool
 from tso_api.routers.collection import router as collection_router
+from tso_api.routers.recipe import router as recipe_router
 from tso_api.service.base_service import ResourceNotFoundError
 
 
@@ -45,6 +46,7 @@ async def lifespan(_instance: FastAPI):
 enable_openapi = '/docs/' if settings.enable_openapi else None
 app = FastAPI(lifespan=lifespan, docs_url=enable_openapi, redoc_url=None)
 app.include_router(collection_router)
+app.include_router(recipe_router)
 
 
 @app.get('/')

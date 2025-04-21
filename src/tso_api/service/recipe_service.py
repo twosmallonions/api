@@ -18,14 +18,14 @@ class RecipeService(BaseService):
         super().__init__(pool)
 
     async def get_recipes_by_user(self, user: User) -> list[RecipeLight]:
-        async with self.begin() as cur:
-            recipes = await recipe_repository.get_recipes_light_by_owner(user.id, cur)
+        async with self._begin(user.id) as cur:
+            recipes = await recipe_repository.get_recipes_light_by_owner(cur)
 
         return [_recipe_light_from_row(recipe) for recipe in recipes]
 
     async def get_by_id(self, recipe_id: UUID, user: User):
-        async with self.begin() as cur:
-            recipe = await recipe_repository.get_recipe_by_id(recipe_id, user.id, cur)
+        async with self._begin(user.id) as cur:
+            recipe = await recipe_repository.get_recipe_by_id(recipe_id, cur)
             if recipe is None:
                 msg = f'recipe with id {recipe_id} not found'
                 raise ResourceNotFoundError(msg)
@@ -33,8 +33,9 @@ class RecipeService(BaseService):
             return _recipe_from_row(recipe)
 
     async def create(self, recipe_create: RecipeCreate, user: User, collection_id: UUID):
-        async with self.begin() as cur:
-            recipe_id = await recipe_repository.create_recipe(recipe_create, collection_id, user.id, cur)
+        async with self._begin(user.id) as cur:
+            new_recipe = await recipe_repository.create_recipe(recipe_create, collection_id, user.id, cur)
+            recipe_id = new_recipe['id']
 
             for position, ingredient in enumerate(recipe_create.ingredients):
                 await ingredient_repository.insert_ingredient(ingredient, position, recipe_id, cur)
@@ -42,7 +43,7 @@ class RecipeService(BaseService):
             for position, instruction in enumerate(recipe_create.instructions):
                 await instruction_repository.insert_instruction(instruction, position, recipe_id, cur)
 
-            recipe = await recipe_repository.get_recipe_by_id(recipe_id, user.id, cur)
+            recipe = await recipe_repository.get_recipe_by_id(recipe_id, cur)
             if recipe is None:
                 msg = f'recipe with id {recipe_id} not found'
                 raise ResourceNotFoundError(msg)
@@ -50,8 +51,8 @@ class RecipeService(BaseService):
             return _recipe_from_row(recipe)
 
     async def update_recipe(self, recipe_id: UUID, recipe_update: RecipeUpdate, user: User):
-        async with self.begin() as cur:
-            current_recipe = await recipe_repository.get_recipe_by_id(recipe_id, user.id, cur)
+        async with self._begin(user.id) as cur:
+            current_recipe = await recipe_repository.get_recipe_by_id(recipe_id, cur)
             if current_recipe is None:
                 msg = f'recipe with id {recipe_id} not found'
                 raise ResourceNotFoundError(msg)
@@ -84,13 +85,15 @@ class RecipeService(BaseService):
                 else:
                     await ingredient_repository.update_ingredient(ingredient.text, position, ingredient.id, cur)
 
+        return await self.get_by_id(recipe_id, user)
+
 
 def _recipe_from_row(row: DictRow) -> RecipeFull:
     cover_image_asset_url = f'/asset/{row["cover_image"]}' if row.get('cover_image') else None
     cover_thumbnail_asset_url = f'/asset/{row["cover_thumbnail"]}' if row.get('cover_thumbnail') else None
     return RecipeFull(
         id=row['id'],
-        collection=row['collection'],
+        collection=row['collection_id'],
         created_by=row['created_by'],
         title=row['title'],
         created_at=row['created_at'],
