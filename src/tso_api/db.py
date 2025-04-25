@@ -12,3 +12,7 @@ async def get_connection():
     async with db_pool.connection(5) as conn:
         await conn.set_autocommit(True)
         yield conn
+
+
+def create_db_pool(db_url: str):
+    return AsyncConnectionPool(db_url, open=False)

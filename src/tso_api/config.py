@@ -1,6 +1,7 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
+from functools import cache
 from pydantic import DirectoryPath, HttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,3 +16,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # pyright: ignore [reportCallIssue]
+
+
+@cache
+def get_settings() -> Settings:
+    return Settings()  # pyright: ignore [reportCallIssue]
