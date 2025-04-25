@@ -14,26 +14,31 @@ from tso_api.repository import NoneAfterInsertError, NoneAfterUpdateError
 async def get_recipes_light_by_owner(cur: AsyncCursor[DictRow]):
     query = """SELECT
     r.id,
-    r.collection,
+    r.collection_id,
     r.title,
     r.created_at,
     r.updated_at,
-    r.liked
-FROM recipes r"""
+    r.liked,
+    r.cover_thumbnail
+FROM tso.recipe r"""
     return await (await cur.execute(query)).fetchall()
 
 
 async def update_cover_image(
     recipe_id: UUID, asset_cover_id: UUID, asset_thumbnail_id: UUID, cur: AsyncCursor[DictRow]
 ):
-    query = """UPDATE recipes
+    query = """UPDATE tso.recipe
     SET
         cover_image = %(cover_image)s,
         cover_thumbnail = %(cover_thumbnail)s
     WHERE
-        owner = %(owner)s AND id = %(id)s
+        id = %(id)s
     """
-    await cur.execute(query, {'cover_image': asset_cover_id, 'cover_thumbnail': asset_thumbnail_id, 'id': recipe_id})
+    res = await cur.execute(query, {'cover_image': asset_cover_id, 'cover_thumbnail': asset_thumbnail_id, 'id': recipe_id})
+
+    if res.rowcount == 0:
+        msg = 'recipe'
+        raise NoneAfterUpdateError(msg, recipe_id)
 
 
 async def update_liked(liked: bool, recipe_id: UUID, cur: AsyncCursor[DictRow]):

@@ -2,71 +2,96 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 import asyncio
-import hashlib
 from pathlib import Path
-from typing import IO
+from typing import IO, Any
 from uuid import UUID
 
 import uuid6
+from fastapi import UploadFile
 from PIL import Image
 from PIL.Image import Resampling
 from PIL.ImageFile import ImageFile
-from psycopg import AsyncConnection
+from psycopg import AsyncCursor
+from psycopg.rows import DictRow
+from psycopg_pool import AsyncConnectionPool
 
-from tso_api.models.asset import AssetBase
-from tso_api.repository import asset_repository
+from tso_api.config import settings
+from tso_api.models.asset import Asset, AssetBase, AssetFile
+from tso_api.models.user import User
+from tso_api.repository import asset_repository, recipe_repository
+from tso_api.service.base_service import BaseService, ResourceNotFoundError
 
 RECIPE_COVER_IMAGE_RESOLUTION = (810, 540)
 RECIPE_COVER_IMAGE_THUMBNAIL_RESOLUTION = (324, 216)
 RECIPE_COVER_IMAGE_FORMAT = 'webp'
+RECIPE_COVER_IMAGE_MIME_TYPE = 'image/webp'
 
 
-async def add_cover_image_to_recipe(
-    recipe_id: UUID, owner: str, file: IO[bytes] | Path, original_filename: str | None, conn: AsyncConnection
+class RecipeAssetService(BaseService):
+    def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
+        super().__init__(pool)
+
+    async def add_cover_image_to_recipe(self, recipe_id: UUID, collection_id: UUID, user: User, file: UploadFile):
+        loop = asyncio.get_running_loop()
+        img = Image.open(file.file)
+        cover_image_id = uuid6.uuid7()
+        cover_image = await loop.run_in_executor(None, _resize_for_recipe_cover, img)
+        cover_image_path = await loop.run_in_executor(
+            None, _save_image, cover_image, user.id, recipe_id, cover_image_id, RECIPE_COVER_IMAGE_FORMAT
+        )
+        async with self._begin(user.id) as cur:
+            await _create_asset(cover_image_path, file.filename, cover_image_id, collection_id, cur)
+
+            thumbnail_image_id = uuid6.uuid7()
+            thumbnail_image = await loop.run_in_executor(None, _make_thumbnail, cover_image)
+            thumbnail_image_path = await loop.run_in_executor(
+                None, _save_image, thumbnail_image, user.id, recipe_id, thumbnail_image_id, RECIPE_COVER_IMAGE_FORMAT
+            )
+
+            await _create_asset(thumbnail_image_path, file.filename, thumbnail_image_id, collection_id, cur)
+
+            await recipe_repository.update_cover_image(recipe_id, cover_image_id, thumbnail_image_id, cur)
+
+    async def get_asset(self, collection_id: UUID, asset_id: UUID, user: User):
+        async with self._begin(user.id) as cur:
+            row = await asset_repository.get_asset_by_id(asset_id, collection_id, cur)
+            if row is None:
+                raise ResourceNotFoundError(str(asset_id))
+
+        return _asset_from_row(row)
+
+
+def _read_asset(path: Path) -> bytes:
+    with path.open('rb') as fd:
+        return fd.read()
+
+
+def _asset_from_row(row: DictRow) -> Asset:
+    return Asset.model_validate(row)
+
+
+async def _create_asset(
+    image_path: Path, original_filename: str | None, image_id: UUID, collection_id: UUID, cur: AsyncCursor[DictRow]
 ):
-    owner_hash = hashlib.sha1(owner.encode()).hexdigest()  # noqa: S324
-    loop = asyncio.get_running_loop()
-
-    img = Image.open(file)
-    cover_image_id = uuid6.uuid7()
-    cover_image = await loop.run_in_executor(None, resize_for_recipe_cover, img)
-    cover_image_path = await loop.run_in_executor(
-        None, save_image, cover_image, owner_hash, recipe_id, cover_image_id, RECIPE_COVER_IMAGE_FORMAT
-    )
-
-    await create_asset(cover_image_path, original_filename, cover_image_id, owner, conn)
-
-    thumbnail_image_id = uuid6.uuid7()
-    thumbnail_image = await loop.run_in_executor(None, make_thumbnail, cover_image)
-    thumbnail_image_path = await loop.run_in_executor(
-        None, save_image, thumbnail_image, owner_hash, recipe_id, thumbnail_image_id, RECIPE_COVER_IMAGE_FORMAT
-    )
-
-    await create_asset(thumbnail_image_path, original_filename, thumbnail_image_id, owner, conn)
+    asset = AssetBase(id=image_id, path=image_path, size=image_path.stat().st_size, original_name=original_filename)
+    await asset_repository.create_asset(asset, collection_id, cur)
 
 
-def make_thumbnail(img: ImageFile | Image.Image):
+def _make_thumbnail(img: ImageFile | Image.Image):
     img_copy = img.copy()
     img_copy.thumbnail(RECIPE_COVER_IMAGE_THUMBNAIL_RESOLUTION)
     return img_copy
 
 
-def save_image(image: Image.Image, owner_hash: str, recipe_id: UUID, image_id: UUID, extension: str) -> Path:
-    image_path = Path(owner_hash) / str(recipe_id) / f'{image_id}.{extension}'
+def _save_image(image: Image.Image, user_id: UUID, recipe_id: UUID, image_id: UUID, extension: str) -> Path:
+    image_path = Path(settings.data_dir / str(user_id)) / str(recipe_id) / f'{image_id}.{extension}'
     image_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(image_path)
 
     return image_path
 
 
-async def create_asset(
-    image_path: Path, original_filename: str | None, image_id: UUID, owner: str, conn: AsyncConnection
-):
-    asset = AssetBase(id=image_id, path=image_path, size=image_path.stat().st_size, original_name=original_filename)
-    await asset_repository.create_asset(asset, owner, conn)
-
-
-def resize_for_recipe_cover(image: ImageFile):
+def _resize_for_recipe_cover(image: ImageFile):
     (width, height) = image.size
     current_ratio = width / height
     (target_width, target_height) = RECIPE_COVER_IMAGE_RESOLUTION

@@ -72,3 +72,4 @@ class RecipeLight(Timestamps):
     title: str
     description: str | None
     liked: bool
+    cover_thumbnail: UUID | None

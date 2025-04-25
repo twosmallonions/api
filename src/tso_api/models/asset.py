@@ -17,3 +17,8 @@ class AssetBase(BaseModel):
 
 class Asset(AssetBase):
     created_at: datetime
+
+
+class AssetFile(Asset):
+    mime_type: str
+    asset_file: bytes

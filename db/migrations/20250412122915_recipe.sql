@@ -13,6 +13,12 @@ CREATE TABLE tso.asset (
 
 CREATE INDEX ON tso.asset (collection_id);
 
+ALTER TABLE tso.asset ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY allow_for_collection_member ON tso.asset
+  FOR ALL
+  USING(collection_id IN (SELECT collection_id FROM tso.get_collections_for_user()));
+
 CREATE TABLE tso.recipe (
     id uuid PRIMARY KEY,
     collection_id uuid NOT NULL REFERENCES tso.collection (id) ON DELETE RESTRICT ON UPDATE RESTRICT,

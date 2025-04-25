@@ -1,5 +1,6 @@
 {
     "include": ["src", "test"],
+    "typeCheckingMode": "strict",
     "pythonVersion": "3.13",
     "allowedUntypedLibraries": ["testcontainers.postgres"],
     "reportUnusedCallResult" : false,
