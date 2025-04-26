@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 from functools import cache
+
 from psycopg_pool import AsyncConnectionPool
 
 from tso_api import config
@@ -19,4 +20,3 @@ async def get_connection():
 @cache
 def db_pool_fn():
     return AsyncConnectionPool(str(config.get_settings().database_url), open=False)
-

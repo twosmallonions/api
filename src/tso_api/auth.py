@@ -6,13 +6,9 @@ from typing import Annotated, final
 
 import httpx
 import jwt
-from fastapi import Depends, Header
+from fastapi import Header
 from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
 from pydantic import BaseModel, HttpUrl
-
-from tso_api.config import settings
-from tso_api.models.user import User
-from tso_api.service import user_service
 
 
 class OIDCWellKnown(BaseModel):
@@ -107,10 +103,3 @@ class OIDCAuth:
             raise AuthenticationError(str(e), 'invalid_token', 'token invalid') from None
 
         return JWT.model_validate(verified_jwt)
-
-
-oidc_auth = OIDCAuth(str(settings.oidc_well_known))
-
-
-async def get_user(jwt: Annotated[JWT, Depends(oidc_auth)]) -> User:
-    return await user_service.get_or_create_user(jwt.sub, jwt.iss)

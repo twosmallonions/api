@@ -25,10 +25,7 @@ async def update_ingredient(text: str, position: int, ingredient_id: UUID, cur: 
         position = %(position)s
     WHERE
         id = %(id)s"""
-    await cur.execute(
-        query,
-        {'text': text, 'position': position, 'id': ingredient_id},
-    )
+    await cur.execute(query, {'text': text, 'position': position, 'id': ingredient_id})
 
 
 async def delete_ingredient(ingredient_id: UUID, cur: AsyncCursor[DictRow]):

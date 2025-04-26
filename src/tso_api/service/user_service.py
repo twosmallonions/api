@@ -1,10 +1,7 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from typing import Any
-
 from psycopg.rows import DictRow
-from psycopg_pool import AsyncConnectionPool
 
 from tso_api.models.user import User
 from tso_api.repository import collection_repository, user_repository

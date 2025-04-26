@@ -11,7 +11,7 @@ from tso_api.repository import NoneAfterInsertError, NoneAfterUpdateError
 
 
 async def new_collection(name: str, cur: AsyncCursor[DictRow]):
-    query = "INSERT INTO tso.collection VALUES (%s, %s) RETURNING *"
+    query = 'INSERT INTO tso.collection VALUES (%s, %s) RETURNING *'
 
     collection_id = uuid6.uuid7()
 
@@ -25,31 +25,31 @@ async def new_collection(name: str, cur: AsyncCursor[DictRow]):
 
 
 async def get_collection_by_id(coll_id: UUID, cur: AsyncCursor[DictRow]):
-    query = "SELECT * FROM tso.collection WHERE id = %s"
+    query = 'SELECT * FROM tso.collection WHERE id = %s'
 
     return await (await cur.execute(query, (coll_id,))).fetchone()
 
 
 async def get_collection_by_name(name: str, cur: AsyncCursor[DictRow]):
-    query = "SELECT * FROM tso.collection WHERE name = %s"
+    query = 'SELECT * FROM tso.collection WHERE name = %s'
 
     return await (await cur.execute(query, (name,))).fetchone()
 
 
 async def get_collections_for_user(cur: AsyncCursor[DictRow]):
-    query = "SELECT c.* FROM tso.collection c"
+    query = 'SELECT c.* FROM tso.collection c'
 
     res = await cur.execute(query)
     return await res.fetchall()
 
 
 async def add_collection_member(collection_id: UUID, user_id: UUID, cur: AsyncCursor[DictRow]):
-    query = "INSERT INTO tso.collection_member VALUES (%s, %s)"
+    query = 'INSERT INTO tso.collection_member VALUES (%s, %s)'
     await cur.execute(query, (collection_id, user_id))
 
 
 async def add_collection_owner(collection_id: UUID, user_id: UUID, cur: AsyncCursor[DictRow]):
-    query = "INSERT INTO tso.collection_member VALUES (%s, %s, true)"
+    query = 'INSERT INTO tso.collection_member VALUES (%s, %s, true)'
     await cur.execute(query, (collection_id, user_id))
 
 

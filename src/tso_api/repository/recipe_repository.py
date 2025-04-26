@@ -34,7 +34,9 @@ async def update_cover_image(
     WHERE
         id = %(id)s
     """
-    res = await cur.execute(query, {'cover_image': asset_cover_id, 'cover_thumbnail': asset_thumbnail_id, 'id': recipe_id})
+    res = await cur.execute(
+        query, {'cover_image': asset_cover_id, 'cover_thumbnail': asset_thumbnail_id, 'id': recipe_id}
+    )
 
     if res.rowcount == 0:
         msg = 'recipe'
@@ -58,18 +60,20 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
     WHERE
         id = %(id)s
     RETURNING *"""
-    res = await (await cur.execute(
-        query,
-        {
-            'title': recipe.title,
-            'note': recipe.note,
-            'cook_time': recipe.cook_time,
-            'prep_time': recipe.prep_time,
-            'yield': recipe.recipe_yield,
-            'liked': recipe.liked,
-            'id': recipe_id,
-        },
-    )).fetchone()
+    res = await (
+        await cur.execute(
+            query,
+            {
+                'title': recipe.title,
+                'note': recipe.note,
+                'cook_time': recipe.cook_time,
+                'prep_time': recipe.prep_time,
+                'yield': recipe.recipe_yield,
+                'liked': recipe.liked,
+                'id': recipe_id,
+            },
+        )
+    ).fetchone()
 
     if res is None:
         msg = 'recipe'
@@ -85,20 +89,22 @@ async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: U
     RETURNING *"""
 
     recipe_id = uuid6.uuid7()
-    res = await (await cur.execute(
-        query,
-        {
-            'id': recipe_id,
-            'collection': collection_id,
-            'created_by': created_by,
-            'title': recipe.title,
-            'note': recipe.note,
-            'cook_time': recipe.cook_time,
-            'prep_time': recipe.prep_time,
-            'yield': recipe.recipe_yield,
-            'liked': recipe.liked,
-        },
-    )).fetchone()
+    res = await (
+        await cur.execute(
+            query,
+            {
+                'id': recipe_id,
+                'collection': collection_id,
+                'created_by': created_by,
+                'title': recipe.title,
+                'note': recipe.note,
+                'cook_time': recipe.cook_time,
+                'prep_time': recipe.prep_time,
+                'yield': recipe.recipe_yield,
+                'liked': recipe.liked,
+            },
+        )
+    ).fetchone()
 
     if res is None:
         msg = 'recipe'
@@ -144,4 +150,4 @@ async def get_recipe_by_id(recipe_id: UUID, cur: AsyncCursor[DictRow]):
         ( SELECT asset.id FROM tso.asset WHERE asset.id = r.cover_thumbnail ) AS cover_thumbnail
     FROM tso.recipe AS r
     WHERE r.id = %s"""
-    return await (await cur.execute(query, (recipe_id, ))).fetchone()
+    return await (await cur.execute(query, (recipe_id,))).fetchone()

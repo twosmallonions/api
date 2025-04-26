@@ -10,11 +10,11 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
 from tso_api.auth import AuthenticationError
-from tso_api.config import get_settings, settings
+from tso_api.config import settings
 from tso_api.db import db_pool, db_pool_fn
+from tso_api.routers.asset import router as asset_router
 from tso_api.routers.collection import router as collection_router
 from tso_api.routers.recipe import router as recipe_router
-from tso_api.routers.asset import router as asset_router
 from tso_api.service.base_service import ResourceNotFoundError
 
 
@@ -56,7 +56,7 @@ app.include_router(asset_router)
 
 @app.get('/')
 def healthcheck():
-    return {"ok": True}
+    return {'ok': True}
 
 
 @app.exception_handler(ResourceNotFoundError)

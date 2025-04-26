@@ -3,9 +3,9 @@
 
 from uuid import UUID
 
+import uuid6
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
-import uuid6
 
 
 async def insert_instruction(text: str, position: int, recipe_id: UUID, cur: AsyncCursor[DictRow]):
@@ -25,10 +25,7 @@ async def update_instruction(text: str, position: int, ingredient_id: UUID, cur:
         position = %(position)s
     WHERE
         id = %(id)s"""
-    await cur.execute(
-        query,
-        {'text': text, 'position': position, 'id': ingredient_id},
-    )
+    await cur.execute(query, {'text': text, 'position': position, 'id': ingredient_id})
 
 
 async def delete_instruction(ingredient_id: UUID, cur: AsyncCursor[DictRow]):

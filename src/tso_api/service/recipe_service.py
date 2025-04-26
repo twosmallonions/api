@@ -1,11 +1,9 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from typing import Any
 from uuid import UUID
 
 from psycopg.rows import DictRow
-from psycopg_pool import AsyncConnectionPool
 
 from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 from tso_api.models.user import User
@@ -57,7 +55,9 @@ class RecipeService(BaseService):
             await recipe_repository.update_recipe(recipe_update, recipe_id, cur)
 
             current_instructions: set[UUID] = {instruction.id for instruction in current_recipe.instructions}
-            new_instructions = {instruction.id for instruction in recipe_update.instructions if instruction.id is not None}
+            new_instructions = {
+                instruction.id for instruction in recipe_update.instructions if instruction.id is not None
+            }
 
             deleted_instructions = current_instructions - new_instructions
             for deleted_instruction in deleted_instructions:
@@ -86,8 +86,12 @@ class RecipeService(BaseService):
 
 
 def _recipe_from_row(row: DictRow) -> RecipeFull:
-    cover_image_asset_url = f'/api/asset/{row['collection_id']}/{row["cover_image"]}' if row.get('cover_image') else None
-    cover_thumbnail_asset_url = f'/asset/{row['collection_id']}/{row["cover_thumbnail"]}' if row.get('cover_thumbnail') else None
+    cover_image_asset_url = (
+        f'/api/asset/{row["collection_id"]}/{row["cover_image"]}' if row.get('cover_image') else None
+    )
+    cover_thumbnail_asset_url = (
+        f'/asset/{row["collection_id"]}/{row["cover_thumbnail"]}' if row.get('cover_thumbnail') else None
+    )
     return RecipeFull(
         id=row['id'],
         collection=row['collection_id'],
@@ -105,7 +109,7 @@ def _recipe_from_row(row: DictRow) -> RecipeFull:
         liked=row['liked'],
         cover_image=cover_image_asset_url,
         cover_thumbnail=cover_thumbnail_asset_url,
-        note=row['note']
+        note=row['note'],
     )
 
 
@@ -118,5 +122,5 @@ def _recipe_light_from_row(row: DictRow) -> RecipeLight:
         liked=row['liked'],
         created_at=row['created_at'],
         updated_at=row['updated_at'],
-        cover_thumbnail=row['cover_thumbnail']
+        cover_thumbnail=row['cover_thumbnail'],
     )

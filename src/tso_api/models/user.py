@@ -16,4 +16,3 @@ class DatabaseUser(TSOBase):
 
 class User(DatabaseUser):
     pass
-

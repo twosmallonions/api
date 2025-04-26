@@ -1,17 +1,14 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from typing import Any
 from uuid import UUID
 
 from psycopg.rows import DictRow
-from psycopg_pool import AsyncConnectionPool
 
-from tso_api.db import db_pool
 from tso_api.models.collection import CollectionCreate, CollectionFull
 from tso_api.models.user import User
 from tso_api.repository import collection_repository
-from tso_api.service.base_service import BaseService, ResourceNotFoundError
+from tso_api.service.base_service import BaseService
 
 
 class CollectionService(BaseService):
@@ -36,6 +33,4 @@ class CollectionService(BaseService):
 
 
 def _collection_from_row(row: DictRow) -> CollectionFull:
-    return CollectionFull(
-        name=row['name'], id=row['id'], created_at=row['created_at'], updated_at=row['updated_at']
-    )
+    return CollectionFull(name=row['name'], id=row['id'], created_at=row['created_at'], updated_at=row['updated_at'])

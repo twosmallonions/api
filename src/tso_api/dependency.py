@@ -9,7 +9,8 @@ from fastapi import Depends
 from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
-from tso_api.auth import get_user
+from tso_api.auth import JWT, OIDCAuth
+from tso_api.config import get_settings
 from tso_api.db import db_pool_fn, get_connection
 from tso_api.models.user import User
 from tso_api.service.collection_service import CollectionService
@@ -17,7 +18,6 @@ from tso_api.service.recipe_asset import RecipeAssetService
 from tso_api.service.recipe_service import RecipeService
 from tso_api.service.user_service import UserService
 
-GetUser = Annotated[User, Depends(get_user)]
 DBConn = Annotated[AsyncConnection, Depends(get_connection)]
 
 
@@ -45,3 +45,15 @@ RecipeServiceDep = Annotated[RecipeService, Depends(get_recipe_service)]
 RecipeAssetServiceDep = Annotated[RecipeAssetService, Depends(get_recipe_asset_service)]
 CollectionServiceDep = Annotated[CollectionService, Depends(get_collection_service)]
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
+
+
+@cache
+def oidc_auth():
+    return OIDCAuth(str(get_settings().oidc_well_known))
+
+
+async def get_user(jwt: Annotated[JWT, Depends(oidc_auth)], user_service: UserServiceDep) -> User:
+    return await user_service.get_or_create_user(jwt.sub, jwt.iss)
+
+
+GetUser = Annotated[User, Depends(get_user)]
