@@ -27,7 +27,7 @@ jobs:
         with:
           version: "0.6.16"
       - run: uv python install
-      - run: uv run pytest 
-      - run: uv run pytest -s  tests/repository
+      - run: curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64 && chmod +x /usr/local/bin/dbmate
+      - run: uv run pytest tests/repository
         env:
           DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable" 
