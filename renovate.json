@@ -3,7 +3,8 @@
   "extends": [
     "config:best-practices",
     "customManagers:dockerfileVersions",
-    ":maintainLockFilesWeekly"
+    ":maintainLockFilesWeekly",
+    "customManagers:githubActionsVersions"
   ],
   "packageRules": [
     {
