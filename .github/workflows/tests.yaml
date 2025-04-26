@@ -33,7 +33,7 @@ jobs:
         with:
           version: ${{env.UV_VERSION}}
       - run: uv python install
-      - run: curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/${{env.DBMATE_VERSION}}/download/dbmate-linux-amd64 && chmod +x /usr/local/bin/dbmate
+      - run: curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/download/${{env.DBMATE_VERSION}}/dbmate-linux-amd64 && chmod +x /usr/local/bin/dbmate
         name: Install dbmate
       - run: uv run pytest tests/repository
         env:
