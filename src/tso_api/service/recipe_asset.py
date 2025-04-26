@@ -3,7 +3,6 @@
 
 import asyncio
 from pathlib import Path
-from typing import IO, Any
 from uuid import UUID
 
 import uuid6
@@ -13,10 +12,9 @@ from PIL.Image import Resampling
 from PIL.ImageFile import ImageFile
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
-from psycopg_pool import AsyncConnectionPool
 
 from tso_api.config import settings
-from tso_api.models.asset import Asset, AssetBase, AssetFile
+from tso_api.models.asset import Asset, AssetBase
 from tso_api.models.user import User
 from tso_api.repository import asset_repository, recipe_repository
 from tso_api.service.base_service import BaseService, ResourceNotFoundError
@@ -28,9 +26,6 @@ RECIPE_COVER_IMAGE_MIME_TYPE = 'image/webp'
 
 
 class RecipeAssetService(BaseService):
-    def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
-        super().__init__(pool)
-
     async def add_cover_image_to_recipe(self, recipe_id: UUID, collection_id: UUID, user: User, file: UploadFile):
         loop = asyncio.get_running_loop()
         img = Image.open(file.file)
@@ -59,11 +54,6 @@ class RecipeAssetService(BaseService):
                 raise ResourceNotFoundError(str(asset_id))
 
         return _asset_from_row(row)
-
-
-def _read_asset(path: Path) -> bytes:
-    with path.open('rb') as fd:
-        return fd.read()
 
 
 def _asset_from_row(row: DictRow) -> Asset:

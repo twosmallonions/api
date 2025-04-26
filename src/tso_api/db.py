@@ -1,8 +1,10 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
+from functools import cache
 from psycopg_pool import AsyncConnectionPool
 
+from tso_api import config
 from tso_api.config import settings
 
 db_pool = AsyncConnectionPool(str(settings.database_url), open=False)
@@ -14,5 +16,7 @@ async def get_connection():
         yield conn
 
 
-def create_db_pool(db_url: str):
-    return AsyncConnectionPool(db_url, open=False)
+@cache
+def db_pool_fn():
+    return AsyncConnectionPool(str(config.get_settings().database_url), open=False)
+

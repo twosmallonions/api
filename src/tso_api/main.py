@@ -10,8 +10,8 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
 from tso_api.auth import AuthenticationError
-from tso_api.config import settings
-from tso_api.db import db_pool
+from tso_api.config import get_settings, settings
+from tso_api.db import db_pool, db_pool_fn
 from tso_api.routers.collection import router as collection_router
 from tso_api.routers.recipe import router as recipe_router
 from tso_api.routers.asset import router as asset_router
@@ -40,7 +40,10 @@ async def lifespan(_instance: FastAPI):
     if code != 0:
         raise DBMigrationError(stderr.decode())
     await db_pool.open(timeout=5)
+    db_pool_fn_ret = db_pool_fn()
+    await db_pool_fn_ret.open()
     yield
+    await db_pool_fn_ret.close()
     await db_pool.close(timeout=5)
 
 

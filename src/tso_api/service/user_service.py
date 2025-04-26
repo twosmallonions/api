@@ -12,9 +12,6 @@ from tso_api.service.base_service import BaseService
 
 
 class UserService(BaseService):
-    def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
-        super().__init__(pool)
-
     async def get_or_create_user(self, subject: str, issuer: str):
         async with self._begin_unsafe() as cur:
             res = await user_repository.get_user(subject, issuer, cur)

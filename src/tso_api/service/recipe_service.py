@@ -14,9 +14,6 @@ from tso_api.service.base_service import BaseService, ResourceNotFoundError
 
 
 class RecipeService(BaseService):
-    def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
-        super().__init__(pool)
-
     async def get_recipes_by_user(self, user: User) -> list[RecipeLight]:
         async with self._begin(user.id) as cur:
             recipes = await recipe_repository.get_recipes_light_by_owner(cur)

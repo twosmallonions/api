@@ -3,12 +3,11 @@
 
 from uuid import UUID
 
-from psycopg import AsyncConnection, AsyncCursor
-from psycopg.rows import DictRow, dict_row
+from psycopg import AsyncCursor
+from psycopg.rows import DictRow
 
-from tso_api.models.asset import Asset, AssetBase
+from tso_api.models.asset import AssetBase
 from tso_api.repository import NoneAfterInsertError
-from tso_api.service.base_service import ResourceNotFoundError
 
 
 async def create_asset(asset: AssetBase, collection_id: UUID, cur: AsyncCursor[DictRow]):

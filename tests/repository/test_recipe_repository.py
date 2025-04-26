@@ -135,7 +135,7 @@ async def test_get_recipe_by_id(recipe_create_fn: RecipeCreateFn, user_col: tupl
 
     async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
         await set_perms(user.id, cur)
-        recipe = await recipe_repository.get_recipe_by_id(created_recipe['id'], user.id, cur)
+        recipe = await recipe_repository.get_recipe_by_id(created_recipe['id'], cur)
 
     verify_recipe(recipe, coll, user, recipe_create)
 
@@ -150,7 +150,7 @@ async def test_collection_member_can_read_recipes_in_collection(recipe_create_fn
 
     async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
         await set_perms(second_user.id, cur)
-        recipe = await recipe_repository.get_recipe_by_id(created_recipe['id'], u.id, cur)
+        recipe = await recipe_repository.get_recipe_by_id(created_recipe['id'], cur)
 
     verify_recipe(recipe, coll, u, recipe_create)
 

@@ -15,9 +15,6 @@ from tso_api.service.base_service import BaseService, ResourceNotFoundError
 
 
 class CollectionService(BaseService):
-    def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
-        super().__init__(pool)
-
     async def new_collection(self, collection: CollectionCreate, user: User) -> CollectionFull:
         async with self._begin(user.id) as cur:
             coll = await collection_repository.new_collection(collection.name, cur)

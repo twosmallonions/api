@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 from contextlib import asynccontextmanager
+from typing import Any
 from uuid import UUID
 
 from psycopg.rows import dict_row
@@ -22,7 +23,7 @@ class ResourceNotFoundError(Exception):
 
 
 class BaseService:
-    def __init__(self, pool: AsyncConnectionPool) -> None:
+    def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
         self.pool = pool
 
     @asynccontextmanager
