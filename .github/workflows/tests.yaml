@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  # renove: datasource=pypi depName=uv
+  # renovate: datasource=pypi depName=uv
   UV_VERSION: "0.6.16"
   # renovate: datasource=github-releases depName=amacneil/dbmate versioning=semver
   DBMATE_VERSION: v2.26.0
