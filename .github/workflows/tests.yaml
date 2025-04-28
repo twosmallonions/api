@@ -7,7 +7,7 @@ on:
 
 env:
   # renovate: datasource=pypi depName=uv
-  UV_VERSION: "0.6.16"
+  UV_VERSION: "0.6.17"
   # renovate: datasource=github-releases depName=amacneil/dbmate versioning=semver
   DBMATE_VERSION: v2.26.0
 
