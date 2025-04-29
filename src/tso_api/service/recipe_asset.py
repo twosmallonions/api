@@ -19,8 +19,8 @@ from tso_api.models.user import User
 from tso_api.repository import asset_repository, recipe_repository
 from tso_api.service.base_service import BaseService, ResourceNotFoundError
 
-RECIPE_COVER_IMAGE_RESOLUTION = (810, 540)
-RECIPE_COVER_IMAGE_THUMBNAIL_RESOLUTION = (324, 216)
+RECIPE_COVER_IMAGE_RESOLUTION = (800, 800)
+RECIPE_COVER_IMAGE_THUMBNAIL_RESOLUTION = (400, 400)
 RECIPE_COVER_IMAGE_FORMAT = 'webp'
 RECIPE_COVER_IMAGE_MIME_TYPE = 'image/webp'
 

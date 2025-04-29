@@ -5,7 +5,7 @@
 from functools import cache
 from typing import Annotated, Any
 
-from fastapi import Depends
+from fastapi import Depends, Header
 from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
@@ -52,7 +52,11 @@ def oidc_auth():
     return OIDCAuth(str(get_settings().oidc_well_known))
 
 
-async def get_user(jwt: Annotated[JWT, Depends(oidc_auth)], user_service: UserServiceDep) -> User:
+def jwt(oidc_auth: Annotated[OIDCAuth, Depends(oidc_auth)], authorization: Annotated[str | None, Header(include_in_schema=False)]):
+    return oidc_auth(authorization)
+
+
+async def get_user(jwt: Annotated[JWT, Depends(jwt)], user_service: UserServiceDep) -> User:
     return await user_service.get_or_create_user(jwt.sub, jwt.iss)
 
 

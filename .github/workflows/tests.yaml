@@ -38,4 +38,5 @@ jobs:
       - run: uv run pytest tests/repository
         env:
           DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable" 
-        name: run tests
+          UV_LINK_MODE: "copy"
+        name: Run tests
