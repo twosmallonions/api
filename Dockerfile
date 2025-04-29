@@ -27,7 +27,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # renovate: datasource=github-releases depName=amacneil/dbmate versioning=semver
-ENV DBMATE_VERSION=v2.26.0
+ENV DBMATE_VERSION=v2.27.0
 
 ADD --chmod=755 https://github.com/amacneil/dbmate/releases/download/${DBMATE_VERSION}/dbmate-linux-amd64 /bin/dbmate
 
