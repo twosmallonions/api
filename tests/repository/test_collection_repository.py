@@ -11,7 +11,8 @@ from psycopg.rows import DictRow, dict_row
 
 from tests.repository.conftest import AsciiLetterString, UserFn
 from tso_api.models.user import User
-from tso_api.repository import NoneAfterUpdateError, collection_repository
+from tso_api.repository import collection_repository
+from tso_api.exceptions import NoneAfterUpdateError
 
 
 async def set_perms(user_id: UUID, cur: AsyncCursor[DictRow]):
