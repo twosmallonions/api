@@ -7,7 +7,7 @@ from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 from uuid6 import uuid7
 
-from tso_api.repository import NoneAfterInsertError, NoneAfterUpdateError
+from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
 
 INSERT_SHOPPING_LIST_QUERY = """INSERT INTO
 shopping_lists

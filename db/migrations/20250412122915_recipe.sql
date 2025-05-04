@@ -36,7 +36,8 @@ CREATE TABLE tso.recipe (
     last_made timestamptz,
     liked bool NOT NULL DEFAULT false,
     cover_image uuid REFERENCES tso.asset (id) ON DELETE SET NULL ON UPDATE RESTRICT,
-    cover_thumbnail uuid REFERENCES tso.asset (id) ON DELETE SET NULL ON UPDATE RESTRICT
+    cover_thumbnail uuid REFERENCES tso.asset (id) ON DELETE SET NULL ON UPDATE RESTRICT,
+    original_url TEXT CHECK (length(original_url) <= 2048)
 );
 
 CREATE TRIGGER tso_recipe_update_updated_at BEFORE UPDATE

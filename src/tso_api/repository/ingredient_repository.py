@@ -9,7 +9,7 @@ from psycopg.rows import DictRow
 
 
 async def insert_ingredient(text: str, position: int, recipe_id: UUID, cur: AsyncCursor[DictRow]):
-    query = """INSERT INTO ingredients (id, text, recipe, position)
+    query = """INSERT INTO tso.ingredient (id, text, recipe_id, position)
     VALUES (%(id)s, %(text)s, %(recipe)s, %(position)s)"""
 
     ingredient_id = uuid6.uuid7()
@@ -19,7 +19,7 @@ async def insert_ingredient(text: str, position: int, recipe_id: UUID, cur: Asyn
 
 
 async def update_ingredient(text: str, position: int, ingredient_id: UUID, cur: AsyncCursor[DictRow]):
-    query = """UPDATE ingredients
+    query = """UPDATE tso.ingredient
     SET
         text = %(text)s,
         position = %(position)s
@@ -29,5 +29,5 @@ async def update_ingredient(text: str, position: int, ingredient_id: UUID, cur: 
 
 
 async def delete_ingredient(ingredient_id: UUID, cur: AsyncCursor[DictRow]):
-    query = 'DELETE FROM ingredients WHERE id = %(id)s'
+    query = 'DELETE FROM tso.ingredient WHERE id = %(id)s'
     await cur.execute(query, {'id': ingredient_id})

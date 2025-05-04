@@ -7,7 +7,7 @@ import uuid6
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 
-from tso_api.repository import NoneAfterInsertError, NoneAfterUpdateError
+from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
 
 
 async def new_collection(name: str, cur: AsyncCursor[DictRow]):

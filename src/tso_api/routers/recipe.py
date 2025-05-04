@@ -2,8 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, UploadFile
 
-from tso_api.dependency import GetUser, RecipeAssetServiceDep, RecipeServiceDep
-from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
+from tso_api.dependency import GetUser, RecipeAssetServiceDep, RecipeServiceDep, RecipeImportServiceDep
+from tso_api.models.recipe import ImportRecipe, RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 
 router = APIRouter(prefix='/api/recipe')
 
@@ -25,9 +25,14 @@ async def get_recipe_by_id(
 async def create_recipe_in_collection(
     recipe_create: RecipeCreate, user: GetUser, collection_id: UUID, recipe_service: RecipeServiceDep
 ) -> RecipeFull:
-    print(id(recipe_service))
     return await recipe_service.create(recipe_create, user, collection_id)
 
+
+@router.post('/{collection_id}/import')
+async def import_recipe_from_url(
+    recipe_import: ImportRecipe, user: GetUser, collection_id: UUID, recipe_import_service: RecipeImportServiceDep
+) -> RecipeFull:
+    return await recipe_import_service.scrape_and_save_recipe(str(recipe_import.url), user, collection_id)
 
 @router.put('/{collection_id}/{recipe_id}')
 async def update_recipe(
@@ -45,6 +50,6 @@ async def add_thumbnail_to_recipe(
     recipe_service: RecipeServiceDep,
     recipe_asset_service: RecipeAssetServiceDep,
 ) -> RecipeFull:
-    await recipe_asset_service.add_cover_image_to_recipe(recipe_id, collection_id, user, file)
+    await recipe_asset_service.add_cover_image_to_recipe(recipe_id, collection_id, user, file.file, file.filename)
 
     return await recipe_service.get_by_id(recipe_id, user)

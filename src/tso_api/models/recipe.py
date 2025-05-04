@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import HttpUrl
 
 from tso_api.models.base import Timestamps, TSOBase
 
@@ -42,24 +42,25 @@ class Recipe(TSOBase):
     prep_time: int | None = None
     recipe_yield: str | None = None
     liked: bool = False
+    original_url: str | None = None
 
 
 class RecipeCreate(Recipe):
-    instructions: list[str] = Field(default_factory=list)
-    ingredients: list[str] = Field(default_factory=list)
+    instructions: list[str] = []
+    ingredients: list[str] = []
 
 
 class RecipeUpdate(Recipe):
-    instructions: list[InstructionUpdate] = Field(default_factory=list)
-    ingredients: list[IngredientUpdate] = Field(default_factory=list)
+    instructions: list[InstructionUpdate] = []
+    ingredients: list[IngredientUpdate] = []
 
 
 class RecipeFull(Recipe, Timestamps):
     id: UUID
     total_time: int | None = None
     last_made: datetime | None
-    instructions: list[Instruction] = Field(default_factory=list)
-    ingredients: list[Ingredient] = Field(default_factory=list)
+    instructions: list[Instruction] = []
+    ingredients: list[Ingredient] = []
     cover_image: str | None = None
     cover_thumbnail: str | None = None
     collection: UUID
@@ -73,3 +74,7 @@ class RecipeLight(Timestamps):
     description: str | None
     liked: bool
     cover_thumbnail: UUID | None
+
+
+class ImportRecipe(TSOBase):
+    url: HttpUrl

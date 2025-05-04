@@ -5,16 +5,18 @@
 from functools import cache
 from typing import Annotated, Any
 
-from fastapi import Depends, Header
+from fastapi import Depends
 from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
+from tso_api import config
 from tso_api.auth import JWT, OIDCAuth
 from tso_api.config import get_settings
 from tso_api.db import db_pool_fn, get_connection
 from tso_api.models.user import User
 from tso_api.service.collection_service import CollectionService
 from tso_api.service.recipe_asset import RecipeAssetService
+from tso_api.service.recipe_import_service import RecipeImportService
 from tso_api.service.recipe_service import RecipeService
 from tso_api.service.user_service import UserService
 
@@ -48,15 +50,23 @@ UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 
 
 @cache
-def oidc_auth():
-    return OIDCAuth(str(get_settings().oidc_well_known))
+def get_recipe_import_service(
+    db_pool_fn: Annotated[AsyncConnectionPool[Any], Depends(db_pool_fn)],
+    recipe_service: RecipeServiceDep,
+    recipe_asset_service: RecipeAssetServiceDep,
+):
+    return RecipeImportService(
+        db_pool_fn, recipe_service, recipe_asset_service, config.get_settings().http_scraper_user_agent
+    )
 
 
-def jwt(oidc_auth: Annotated[OIDCAuth, Depends(oidc_auth)], authorization: Annotated[str | None, Header(include_in_schema=False)]):
-    return oidc_auth(authorization)
+RecipeImportServiceDep = Annotated[RecipeImportService, Depends(get_recipe_import_service)]
 
 
-async def get_user(jwt: Annotated[JWT, Depends(jwt)], user_service: UserServiceDep) -> User:
+oidc_auth = OIDCAuth(str(get_settings().oidc_well_known))
+
+
+async def get_user(jwt: Annotated[JWT, Depends(oidc_auth)], user_service: UserServiceDep) -> User:
     return await user_service.get_or_create_user(jwt.sub, jwt.iss)
 
 

@@ -3,10 +3,10 @@
 
 import asyncio
 from pathlib import Path
+from typing import BinaryIO
 from uuid import UUID
 
 import uuid6
-from fastapi import UploadFile
 from PIL import Image
 from PIL.Image import Resampling
 from PIL.ImageFile import ImageFile
@@ -14,10 +14,11 @@ from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 
 from tso_api.config import settings
+from tso_api.exceptions import ResourceNotFoundError
 from tso_api.models.asset import Asset, AssetBase
 from tso_api.models.user import User
 from tso_api.repository import asset_repository, recipe_repository
-from tso_api.service.base_service import BaseService, ResourceNotFoundError
+from tso_api.service.base_service import BaseService
 
 RECIPE_COVER_IMAGE_RESOLUTION = (800, 800)
 RECIPE_COVER_IMAGE_THUMBNAIL_RESOLUTION = (400, 400)
@@ -26,16 +27,19 @@ RECIPE_COVER_IMAGE_MIME_TYPE = 'image/webp'
 
 
 class RecipeAssetService(BaseService):
-    async def add_cover_image_to_recipe(self, recipe_id: UUID, collection_id: UUID, user: User, file: UploadFile):
+    # TODO: make file be something more generic
+    async def add_cover_image_to_recipe(
+        self, recipe_id: UUID, collection_id: UUID, user: User, file: BinaryIO, filename: str | None
+    ):
         loop = asyncio.get_running_loop()
-        img = Image.open(file.file)
+        img = Image.open(file)
         cover_image_id = uuid6.uuid7()
         cover_image = await loop.run_in_executor(None, _resize_for_recipe_cover, img)
         cover_image_path = await loop.run_in_executor(
             None, _save_image, cover_image, user.id, recipe_id, cover_image_id, RECIPE_COVER_IMAGE_FORMAT
         )
         async with self._begin(user.id) as cur:
-            await _create_asset(cover_image_path, file.filename, cover_image_id, collection_id, cur)
+            await _create_asset(cover_image_path, filename, cover_image_id, collection_id, cur)
 
             thumbnail_image_id = uuid6.uuid7()
             thumbnail_image = await loop.run_in_executor(None, _make_thumbnail, cover_image)
@@ -43,7 +47,7 @@ class RecipeAssetService(BaseService):
                 None, _save_image, thumbnail_image, user.id, recipe_id, thumbnail_image_id, RECIPE_COVER_IMAGE_FORMAT
             )
 
-            await _create_asset(thumbnail_image_path, file.filename, thumbnail_image_id, collection_id, cur)
+            await _create_asset(thumbnail_image_path, filename, thumbnail_image_id, collection_id, cur)
 
             await recipe_repository.update_cover_image(recipe_id, cover_image_id, thumbnail_image_id, cur)
 

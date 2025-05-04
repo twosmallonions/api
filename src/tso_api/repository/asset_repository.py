@@ -6,8 +6,8 @@ from uuid import UUID
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 
+from tso_api.exceptions import NoneAfterInsertError
 from tso_api.models.asset import AssetBase
-from tso_api.repository import NoneAfterInsertError
 
 
 async def create_asset(asset: AssetBase, collection_id: UUID, cur: AsyncCursor[DictRow]):

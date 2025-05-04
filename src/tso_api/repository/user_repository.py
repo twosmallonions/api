@@ -5,7 +5,7 @@ from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 from uuid6 import uuid7
 
-from tso_api.repository import NoneAfterInsertError
+from tso_api.exceptions import NoneAfterInsertError
 
 GET_USER_QUERY = 'SELECT id, subject, issuer, created_at FROM tso.account WHERE issuer = %s and subject = %s'
 

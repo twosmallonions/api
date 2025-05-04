@@ -7,7 +7,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]==0.115.12",
-    "httpx==0.28.1",
+    "httpx[h2,brotli]==0.28.1",
     "pillow==11.2.1",
     "psycopg[binary,pool]==3.2.6",
     "pydantic==2.11.4",
@@ -15,6 +15,7 @@ dependencies = [
     "pyhumps==3.8.0",
     "pyjwt[crypto]==2.10.1",
     "python-multipart==0.0.20",
+    "recipe-scrapers>=15.7.0",
     "uuid6==2024.7.10",
 ]
 
@@ -74,12 +75,14 @@ ignore = [
   "CPY001",
   "S404",
   "S603",
-  "ANN201",
   "ANN202",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "TRY002", "TRY003", "EM101", "FBT003", "S311", "PLR2004"]
+"!src/tso_api/routers/*.py" = ["ANN201"]
+"src/tso_api/models/*.py" = ["RUF012"]
+
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

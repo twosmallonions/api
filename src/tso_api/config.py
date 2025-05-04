@@ -11,9 +11,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env')
     database_url: PostgresDsn
     oidc_well_known: HttpUrl
-    jwt_algorithms: list[str] = ['RS256']
     data_dir: DirectoryPath
     enable_openapi: bool = True
+    http_scraper_user_agent: str = 'tso-api / 0.1.0'
 
 
 settings = Settings()  # pyright: ignore [reportCallIssue]

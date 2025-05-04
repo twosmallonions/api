@@ -5,10 +5,11 @@ from uuid import UUID
 
 from psycopg.rows import DictRow
 
+from tso_api.exceptions import ResourceNotFoundError
 from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 from tso_api.models.user import User
 from tso_api.repository import ingredient_repository, instruction_repository, recipe_repository
-from tso_api.service.base_service import BaseService, ResourceNotFoundError
+from tso_api.service.base_service import BaseService
 
 
 class RecipeService(BaseService):
@@ -110,6 +111,7 @@ def _recipe_from_row(row: DictRow) -> RecipeFull:
         cover_image=cover_image_asset_url,
         cover_thumbnail=cover_thumbnail_asset_url,
         note=row['note'],
+        original_url=row['original_url']
     )
 
 

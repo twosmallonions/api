@@ -4,18 +4,16 @@
 import asyncio
 import shutil
 from contextlib import asynccontextmanager
-from http import HTTPStatus
 
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
-from tso_api.auth import AuthenticationError
 from tso_api.config import settings
 from tso_api.db import db_pool, db_pool_fn
+from tso_api.exceptions import ApiError, ApiHttpError, AuthenticationError, ScrapeRecipeError
 from tso_api.routers.asset import router as asset_router
 from tso_api.routers.collection import router as collection_router
 from tso_api.routers.recipe import router as recipe_router
-from tso_api.service.base_service import ResourceNotFoundError
 
 
 class DBMigrationError(Exception):
@@ -52,6 +50,11 @@ app = FastAPI(lifespan=lifespan, docs_url=enable_openapi, redoc_url=None)
 app.include_router(collection_router)
 app.include_router(recipe_router)
 app.include_router(asset_router)
+origins = ['*']
+
+app.add_middleware(
+    CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=['*'], allow_headers=['*']
+)
 
 
 @app.get('/')
@@ -59,20 +62,13 @@ def healthcheck():
     return {'ok': True}
 
 
-@app.exception_handler(ResourceNotFoundError)
-def resource_not_found_handler(_request: Request, exc: ResourceNotFoundError):
-    return JSONResponse(
-        status_code=HTTPStatus.NOT_FOUND,
-        content={'error': 'resource_not_found', 'resource': exc.resource, 'message': str(exc)},
+
+@app.exception_handler(ApiError)
+def handle_api_error(_request: Request, exc: ApiError):
+    error_response = ApiHttpError(error=str(exc), detail=exc.detail(), id=exc.error_id()).model_dump_json(
+        exclude_none=True
     )
-
-
-@app.exception_handler(AuthenticationError)
-def authentication_error_handler(_request: Request, exc: AuthenticationError):
-    www_authenticate_header = 'Bearer realm="tso"'
-    if exc.www_authenticate_error:
-        www_authenticate_header += f' error="{exc.www_authenticate_error}"'
-
-    if exc.error_description:
-        www_authenticate_header += f' error_description="{exc.error_description}"'
-    return Response(status_code=401, headers={'www-authenticate': www_authenticate_header})
+    headers = {'content-type': 'application/json'} | exc.http_headers()
+    if isinstance(exc, AuthenticationError):
+        print(f'auth error: {exc.error_message}')
+    return Response(status_code=exc.status, content=error_response, headers=headers)

@@ -2,13 +2,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 from functools import cached_property
-from typing import Annotated, final
+from typing import Annotated
 
 import httpx
 import jwt
 from fastapi import Header
 from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
 from pydantic import BaseModel, HttpUrl
+
+from tso_api.exceptions import AuthenticationError
 
 
 class OIDCWellKnown(BaseModel):
@@ -22,18 +24,6 @@ class JWT(BaseModel):
     sub: str
     email: str
     preferred_username: str
-
-
-@final
-class AuthenticationError(Exception):
-    www_authenticate_error: str | None
-    error_description: str | None
-    msg = 'Authentication failed: {}'
-
-    def __init__(self, error_message: str, error: str | None = None, error_description: str | None = None) -> None:
-        self.www_authenticate_error = error
-        self.error_description = error_description
-        super().__init__(self.msg.format(error_message))
 
 
 AUTHORIZATION_HEADER_PARTS = 2

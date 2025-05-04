@@ -9,19 +9,6 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 
-class ServiceError(Exception):
-    pass
-
-
-class ResourceNotFoundError(Exception):
-    msg: str = 'resource not found: {0}'
-    resource: str
-
-    def __init__(self, resource: str) -> None:
-        self.resource = resource
-        super().__init__(self.msg.format(resource))
-
-
 class BaseService:
     def __init__(self, pool: AsyncConnectionPool[Any]) -> None:
         self.pool = pool

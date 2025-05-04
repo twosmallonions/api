@@ -8,7 +8,7 @@ from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 
 from tso_api.models.recipe import RecipeCreate, RecipeUpdate
-from tso_api.repository import NoneAfterInsertError, NoneAfterUpdateError
+from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
 
 
 async def get_recipes_light_by_owner(cur: AsyncCursor[DictRow]):
@@ -56,7 +56,8 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
         cook_time = %(cook_time)s,
         prep_time = %(prep_time)s,
         yield = %(yield)s,
-        liked = %(liked)s
+        liked = %(liked)s,
+        original_url = %(original_url)s
     WHERE
         id = %(id)s
     RETURNING *"""
@@ -71,6 +72,7 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
                 'yield': recipe.recipe_yield,
                 'liked': recipe.liked,
                 'id': recipe_id,
+                'original_url': recipe.original_url
             },
         )
     ).fetchone()
@@ -84,8 +86,8 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
 
 async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: UUID, cur: AsyncCursor[DictRow]):
     query = """INSERT INTO tso.recipe
-    (id, collection_id, created_by, title, cook_time, prep_time, yield, liked, note)
-    VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s)
+    (id, collection_id, created_by, title, cook_time, prep_time, yield, liked, note, original_url)
+    VALUES (%(id)s, %(collection)s, %(created_by)s, %(title)s, %(cook_time)s, %(prep_time)s, %(yield)s, %(liked)s, %(note)s, %(original_url)s)
     RETURNING *"""
 
     recipe_id = uuid6.uuid7()
@@ -102,6 +104,7 @@ async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: U
                 'prep_time': recipe.prep_time,
                 'yield': recipe.recipe_yield,
                 'liked': recipe.liked,
+                'original_url': recipe.original_url
             },
         )
     ).fetchone()
@@ -128,6 +131,7 @@ async def get_recipe_by_id(recipe_id: UUID, cur: AsyncCursor[DictRow]):
         r.liked,
         r.created_by,
         r.note,
+        r.original_url,
         (
             SELECT
                 array_agg(
