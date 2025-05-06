@@ -87,12 +87,6 @@ class RecipeService(BaseService):
 
 
 def _recipe_from_row(row: DictRow) -> RecipeFull:
-    cover_image_asset_url = (
-        f'/api/asset/{row["collection_id"]}/{row["cover_image"]}' if row.get('cover_image') else None
-    )
-    cover_thumbnail_asset_url = (
-        f'/asset/{row["collection_id"]}/{row["cover_thumbnail"]}' if row.get('cover_thumbnail') else None
-    )
     return RecipeFull(
         id=row['id'],
         collection=row['collection_id'],
@@ -108,8 +102,8 @@ def _recipe_from_row(row: DictRow) -> RecipeFull:
         instructions=row['instructions'] or [],
         ingredients=row['ingredients'] or [],
         liked=row['liked'],
-        cover_image=cover_image_asset_url,
-        cover_thumbnail=cover_thumbnail_asset_url,
+        cover_image=row['cover_image'],
+        cover_thumbnail=row['cover_thumbnail'],
         note=row['note'],
         original_url=row['original_url']
     )

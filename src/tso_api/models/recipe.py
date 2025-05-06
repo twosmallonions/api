@@ -61,8 +61,8 @@ class RecipeFull(Recipe, Timestamps):
     last_made: datetime | None
     instructions: list[Instruction] = []
     ingredients: list[Ingredient] = []
-    cover_image: str | None = None
-    cover_thumbnail: str | None = None
+    cover_image: UUID | None = None
+    cover_thumbnail: UUID | None = None
     collection: UUID
     created_by: UUID
 
