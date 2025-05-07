@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from tso_api.config import settings
 from tso_api.db import db_pool, db_pool_fn
-from tso_api.exceptions import ApiError, ApiHttpError, AuthenticationError, ScrapeRecipeError
+from tso_api.exceptions import ApiError, ApiHttpError, AuthenticationError
 from tso_api.routers.asset import router as asset_router
 from tso_api.routers.collection import router as collection_router
 from tso_api.routers.recipe import router as recipe_router
@@ -60,7 +60,6 @@ app.add_middleware(
 @app.get('/')
 def healthcheck():
     return {'ok': True}
-
 
 
 @app.exception_handler(ApiError)

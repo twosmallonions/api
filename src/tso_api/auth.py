@@ -6,10 +6,12 @@ from typing import Annotated
 
 import httpx
 import jwt
-from fastapi import Header
+from fastapi import Depends
+from fastapi.security import OpenIdConnect
 from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
 from pydantic import BaseModel, HttpUrl
 
+from tso_api import config
 from tso_api.exceptions import AuthenticationError
 
 
@@ -27,6 +29,9 @@ class JWT(BaseModel):
 
 
 AUTHORIZATION_HEADER_PARTS = 2
+
+
+oidc_scheme = OpenIdConnect(openIdConnectUrl=str(config.get_settings().oidc_well_known))
 
 
 class OIDCAuth:
@@ -54,11 +59,7 @@ class OIDCAuth:
     def issuer(self) -> str:
         return self.well_known.issuer
 
-    def __call__(self, authorization: Annotated[str | None, Header()] = None) -> JWT:
-        if authorization is None:
-            msg = 'no authorization header'
-            raise AuthenticationError(msg)
-
+    def __call__(self, authorization: Annotated[str, Depends(oidc_scheme)]) -> JWT:
         split = authorization.split(' ', 1)
         if len(split) != AUTHORIZATION_HEADER_PARTS:
             msg = 'invalid authorization header'

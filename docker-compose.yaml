@@ -1,0 +1,23 @@
+services:
+  api:
+    build: .
+    ports:
+      - 8000:8000
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable
+      - DATA_DIR=/data
+      - OIDC_WELL_KNOWN=
+      - ENABLE_OPENAPI=true
+    volumes:
+      - ./data:/data
+  postgres:
+    image: postgres:17
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+
+volumes:
+  pg_data:
