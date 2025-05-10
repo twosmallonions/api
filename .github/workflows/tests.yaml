@@ -15,7 +15,7 @@ jobs:
   run-tests:
     name: Run tests
     runs-on: ubuntu-24.04
-    container: python:3.13-bookworm@sha256:b7ce60fbc565933c5ae088df8dbe63ffad16a634d4c575ec989e2f106f7df674
+    container: python:3.13-bookworm@sha256:ee8747fc77699389c19486f15346466285731b4cb1378c514be1da9dbd399fba
 
     services:
       postgres:
