@@ -1,17 +1,29 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 
-from tso_api.dependency import GetUser, RecipeAssetServiceDep, RecipeServiceDep, RecipeImportServiceDep
+from tso_api.dependency import (
+    GetUser,
+    RecipeAssetServiceDep,
+    RecipeImportServiceDep,
+    RecipeServiceDep,
+    recipe_list_query_parameters,
+)
+from tso_api.models.query_params import RecipeQueryParams
 from tso_api.models.recipe import ImportRecipe, RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 
 router = APIRouter(prefix='/api/recipe')
 
 
 @router.get('/')
-async def get_all_recipes_for_user(user: GetUser, recipe_service: RecipeServiceDep) -> list[RecipeLight]:
-    print(id(recipe_service))
-    return await recipe_service.get_recipes_by_user(user)
+async def get_all_recipes_for_user(
+    user: GetUser,
+    recipe_service: RecipeServiceDep,
+    query_params: Annotated[RecipeQueryParams, Depends(recipe_list_query_parameters)],
+) -> list[RecipeLight]:
+    print(query_params)
+    return await recipe_service.get_recipes_by_user(user, query_params)
 
 
 @router.get('/{collection_id}/{recipe_id}')
@@ -33,6 +45,7 @@ async def import_recipe_from_url(
     recipe_import: ImportRecipe, user: GetUser, collection_id: UUID, recipe_import_service: RecipeImportServiceDep
 ) -> RecipeFull:
     return await recipe_import_service.scrape_and_save_recipe(str(recipe_import.url), user, collection_id)
+
 
 @router.put('/{collection_id}/{recipe_id}')
 async def update_recipe(

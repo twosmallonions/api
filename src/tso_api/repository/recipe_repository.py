@@ -1,18 +1,62 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
+import base64
+import datetime
+from typing import Any
 from uuid import UUID
 
 import uuid6
-from psycopg import AsyncCursor
+from psycopg import AsyncCursor, sql
 from psycopg.rows import DictRow
+from pydantic import BaseModel, ConfigDict, Field
 
+from tso_api.exceptions import CursorPaginationError, NoneAfterInsertError, NoneAfterUpdateError
+from tso_api.models.query_params import RecipeSortField, SortOrder
 from tso_api.models.recipe import RecipeCreate, RecipeUpdate
-from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
 
 
-async def get_recipes_light_by_owner(cur: AsyncCursor[DictRow]):
-    query = """SELECT
+class CursorStructure(BaseModel):
+    model_config = ConfigDict(validate_by_alias=True, validate_by_name=True)
+    last_value: str | datetime.datetime | int = Field(alias='l')
+    sort_order: SortOrder = Field(alias='o')
+    sort_field: str = Field(alias='f')
+    last_id: UUID = Field(alias='i')
+
+
+async def get_recipes_light_by_owner(
+    cur: AsyncCursor[DictRow],
+    limit: int,
+    sort_field: RecipeSortField = RecipeSortField.CREATED_AT,
+    sort_order: SortOrder = SortOrder.DESC,
+    cursor: str | None = None,
+) -> tuple[list[DictRow], str | None]:
+    where_clause: list[sql.Composable] = []
+    where_clause_params: dict[str, Any] = {}
+    if cursor:
+        decoded_cursor = base64.urlsafe_b64decode(cursor).decode('utf-8')
+        cursor_struct = CursorStructure.model_validate_json(decoded_cursor)
+
+        if cursor_struct.sort_order != sort_order:
+            msg = "sort_order doesn't match"
+            raise CursorPaginationError(msg)
+        sort_order_symbol = sql.SQL('<') if cursor_struct.sort_order == SortOrder.DESC else sql.SQL('>')
+
+        if cursor_struct.sort_field != sort_field:
+            msg = "sort_field doesn't match"
+            raise CursorPaginationError(msg)
+
+        cursor_where_clause = sql.SQL(
+            '(r.{sort_field}, r.id) {sort_order_symbol} (%(cursor_sort_value)s, %(cursor_sort_id)s)'
+        ).format(sort_field=sql.Identifier(cursor_struct.sort_field), sort_order_symbol=sort_order_symbol)
+        where_clause.append(cursor_where_clause)
+        where_clause_params |= {'cursor_sort_value': cursor_struct.last_value, 'cursor_sort_id': cursor_struct.last_id}
+
+    if len(where_clause) != 0:
+        where_clause.insert(0, sql.SQL('WHERE '))
+
+    sort_order_sql = sql.SQL('DESC') if sort_order == SortOrder.DESC else sql.SQL('ASC')
+    query = sql.SQL("""SELECT
     r.id,
     r.collection_id,
     r.title,
@@ -20,8 +64,40 @@ async def get_recipes_light_by_owner(cur: AsyncCursor[DictRow]):
     r.updated_at,
     r.liked,
     r.cover_thumbnail
-FROM tso.recipe r"""
-    return await (await cur.execute(query)).fetchall()
+FROM tso.recipe r
+{where_clause}
+ORDER BY r.{sort_field} {sort_order}, r.id {sort_order}
+LIMIT %(limit)s""").format(
+        sort_field=sql.Identifier(sort_field), sort_order=sort_order_sql, where_clause=sql.Composed(where_clause)
+    )
+    params = {'limit': limit} | where_clause_params
+    res = await (await cur.execute(query, params)).fetchall()
+
+    if len(res) != limit:
+        return (res, None)
+
+    cursor_value = res[-1]
+
+    new_cursor_value = cursor_value.get(sort_field)
+    if new_cursor_value is None:
+        msg = 'new_cursor_value is none'
+        raise CursorPaginationError(msg)
+
+    new_cursor_id = cursor_value.get('id')
+
+    if new_cursor_id is None:
+        msg = 'new_cursor_id is None'
+        raise CursorPaginationError(msg)
+
+    new_cursor_struct = CursorStructure.model_validate(
+        {'last_value': new_cursor_value, 'sort_order': sort_order, 'sort_field': sort_field, 'last_id': new_cursor_id}
+    )
+
+    new_cursor = base64.urlsafe_b64encode(new_cursor_struct.model_dump_json(by_alias=True).encode('utf-8')).decode(
+        'utf-8'
+    )
+
+    return res, new_cursor
 
 
 async def update_cover_image(
@@ -72,7 +148,7 @@ async def update_recipe(recipe: RecipeUpdate, recipe_id: UUID, cur: AsyncCursor[
                 'yield': recipe.recipe_yield,
                 'liked': recipe.liked,
                 'id': recipe_id,
-                'original_url': recipe.original_url
+                'original_url': recipe.original_url,
             },
         )
     ).fetchone()
@@ -104,7 +180,7 @@ async def create_recipe(recipe: RecipeCreate, collection_id: UUID, created_by: U
                 'prep_time': recipe.prep_time,
                 'yield': recipe.recipe_yield,
                 'liked': recipe.liked,
-                'original_url': recipe.original_url
+                'original_url': recipe.original_url,
             },
         )
     ).fetchone()

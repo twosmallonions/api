@@ -13,6 +13,7 @@ from tso_api import config
 from tso_api.auth import JWT, OIDCAuth
 from tso_api.config import get_settings
 from tso_api.db import db_pool_fn, get_connection
+from tso_api.models.query_params import BaseSort, CursorPagination, RecipeQueryParams, RecipeSortField, SortOrder
 from tso_api.models.user import User
 from tso_api.service.collection_service import CollectionService
 from tso_api.service.recipe_asset import RecipeAssetService
@@ -71,3 +72,18 @@ async def get_user(jwt: Annotated[JWT, Depends(oidc_auth)], user_service: UserSe
 
 
 GetUser = Annotated[User, Depends(get_user)]
+
+
+def cursor_pagination(limit: int = 50, cursor: str | None = None):
+    return CursorPagination(limit=limit, cursor=cursor)
+
+
+def recipe_list_query_parameters(
+    pagination: Annotated[CursorPagination, Depends(cursor_pagination)],
+    order: SortOrder = SortOrder.DESC,
+    field: RecipeSortField = RecipeSortField.CREATED_AT,
+    search: str | None = None,
+):
+    base_sort = BaseSort(order=order, field=field)
+
+    return RecipeQueryParams(pagination=pagination, sort=base_sort, search=search)

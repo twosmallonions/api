@@ -127,10 +127,10 @@ def _get_field(scraper: AbstractScraper, field: str, default: Any = None):  # no
     try:
         fn = getattr(scraper, field)
         return fn()
-    except (FieldNotProvidedByWebsiteException, ElementNotFoundInHtml):
-        return default
     except StaticValueException as e:
         return e.return_value
+    except:  # noqa: E722 Sometimes a SchemaOrgException is thrown which can't even be imported from RecipeScrapers
+        return default
 
 
 @overload
@@ -150,5 +150,5 @@ def _get_str(scraper: AbstractScraper, field: str, default: str | None = None):
 def _get_int(scraper: AbstractScraper, field: str, default: int | None = None):
     try:
         return int(_get_field(scraper, field, default))
-    except ValueError:
+    except (ValueError, TypeError):
         return None

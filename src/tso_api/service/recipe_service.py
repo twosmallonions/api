@@ -6,6 +6,7 @@ from uuid import UUID
 from psycopg.rows import DictRow
 
 from tso_api.exceptions import ResourceNotFoundError
+from tso_api.models.query_params import RecipeQueryParams
 from tso_api.models.recipe import RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 from tso_api.models.user import User
 from tso_api.repository import ingredient_repository, instruction_repository, recipe_repository
@@ -13,9 +14,13 @@ from tso_api.service.base_service import BaseService
 
 
 class RecipeService(BaseService):
-    async def get_recipes_by_user(self, user: User) -> list[RecipeLight]:
+    async def get_recipes_by_user(self, user: User, query_params: RecipeQueryParams) -> list[RecipeLight]:
         async with self._begin(user.id) as cur:
-            recipes = await recipe_repository.get_recipes_light_by_owner(cur)
+            recipes, cursor = await recipe_repository.get_recipes_light_by_owner(
+                cur, query_params.pagination.limit, query_params.sort.field, query_params.sort.order, query_params.pagination.cursor
+            )
+
+            print(cursor)
 
         return [_recipe_light_from_row(recipe) for recipe in recipes]
 
@@ -105,7 +110,7 @@ def _recipe_from_row(row: DictRow) -> RecipeFull:
         cover_image=row['cover_image'],
         cover_thumbnail=row['cover_thumbnail'],
         note=row['note'],
-        original_url=row['original_url']
+        original_url=row['original_url'],
     )
 
 

@@ -90,3 +90,11 @@ class ResourceNotFoundError(ApiError):
     def __init__(self, resource: str) -> None:
         self.resource = resource
         super().__init__(self.msg.format(resource))
+
+
+class CursorPaginationError(ApiError):
+    msg: str = 'invalid cursor: {}'
+    status = 400
+
+    def __init__(self, msg: str) -> None:
+        super().__init__(self.msg.format(msg))
