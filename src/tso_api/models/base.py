@@ -18,3 +18,8 @@ class TSOBase(BaseModel):
 class Timestamps(TSOBase):
     created_at: datetime
     updated_at: datetime
+
+
+class ListResponse[T](TSOBase):
+    cursor: str | None
+    data: list[T]

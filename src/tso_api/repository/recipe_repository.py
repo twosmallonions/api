@@ -70,13 +70,13 @@ ORDER BY r.{sort_field} {sort_order}, r.id {sort_order}
 LIMIT %(limit)s""").format(
         sort_field=sql.Identifier(sort_field), sort_order=sort_order_sql, where_clause=sql.Composed(where_clause)
     )
-    params = {'limit': limit} | where_clause_params
+    params = {'limit': limit + 1} | where_clause_params
     res = await (await cur.execute(query, params)).fetchall()
 
-    if len(res) != limit:
+    if len(res) != limit + 1:
         return (res, None)
 
-    cursor_value = res[-1]
+    cursor_value = res[limit - 1]
 
     new_cursor_value = cursor_value.get(sort_field)
     if new_cursor_value is None:
@@ -97,7 +97,7 @@ LIMIT %(limit)s""").format(
         'utf-8'
     )
 
-    return res, new_cursor
+    return res[:-1], new_cursor
 
 
 async def update_cover_image(

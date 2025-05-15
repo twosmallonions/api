@@ -10,10 +10,11 @@ from tso_api.dependency import (
     RecipeServiceDep,
     recipe_list_query_parameters,
 )
+from tso_api.models.base import ListResponse
 from tso_api.models.query_params import RecipeQueryParams
 from tso_api.models.recipe import ImportRecipe, RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 
-router = APIRouter(prefix='/api/recipe')
+router = APIRouter(prefix='/api/recipe', tags=['recipe'])
 
 
 @router.get('/')
@@ -21,8 +22,7 @@ async def get_all_recipes_for_user(
     user: GetUser,
     recipe_service: RecipeServiceDep,
     query_params: Annotated[RecipeQueryParams, Depends(recipe_list_query_parameters)],
-) -> list[RecipeLight]:
-    print(query_params)
+) -> ListResponse[RecipeLight]:
     return await recipe_service.get_recipes_by_user(user, query_params)
 
 
