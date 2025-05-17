@@ -36,4 +36,4 @@ COPY --from=builder /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 
 ENV ENABLE_OPENAPI=false DATA_DIR=/data
-CMD [ "fastapi", "run", "--host", "0.0.0.0", "/app/src/tso_api/main.py" ]
+CMD [ "fastapi", "run", "--host", "0.0.0.0", "--workers", "4", "/app/src/tso_api/main.py" ]

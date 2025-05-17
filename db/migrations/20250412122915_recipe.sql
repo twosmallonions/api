@@ -48,6 +48,11 @@ CREATE TRIGGER tso_recipe_update_updated_at BEFORE UPDATE
 CREATE INDEX ON tso.recipe (collection_id);
 CREATE INDEX ON tso.recipe (cover_image);
 CREATE INDEX ON tso.recipe (cover_thumbnail);
+CREATE INDEX ON tso.recipe (created_at);
+CREATE INDEX ON tso.recipe (updated_at);
+CREATE INDEX ON tso.recipe (title);
+CREATE INDEX ON tso.recipe (liked);
+CREATE INDEX ON tso.recipe (last_made);
 
 ALTER TABLE tso.recipe ENABLE ROW LEVEL SECURITY;
 
