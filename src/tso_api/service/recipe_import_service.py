@@ -7,8 +7,6 @@ import httpx
 from psycopg_pool.pool_async import AsyncConnectionPool
 from recipe_scrapers import (
     AbstractScraper,
-    ElementNotFoundInHtml,
-    FieldNotProvidedByWebsiteException,
     NoSchemaFoundInWildMode,
     RecipeSchemaNotFound,
     StaticValueException,

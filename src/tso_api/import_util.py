@@ -1,6 +1,6 @@
 import importlib
-import pkgutil
 import inspect
+import pkgutil
 
 
 def load_concrete_classes_from_pkg[T](package: str, cls: type[T]) -> list[type[T]]:

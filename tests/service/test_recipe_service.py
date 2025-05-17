@@ -4,13 +4,12 @@
 import random
 import string
 
-from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
 from tso_api.models.collection import CollectionCreate
 from tso_api.models.recipe import IngredientUpdate, InstructionUpdate, RecipeCreate, RecipeFull, RecipeUpdate
 from tso_api.models.user import User
-from tso_api.repository import recipe_repository, user_repository
+from tso_api.repository import user_repository
 from tso_api.service.collection_service import CollectionService
 from tso_api.service.recipe_service import RecipeService
 

@@ -2,16 +2,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 
-import os
 import random
-import shutil
 import string
-import subprocess
 import uuid
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 
 import pytest
-from psycopg_pool import AsyncConnectionPool
 from testcontainers.postgres import PostgresContainer
 
 from tso_api.models.recipe import RecipeCreate, RecipeUpdate
@@ -56,6 +52,7 @@ def recipe_update():
         liked=updated_liked,
         collection=uuid.uuid4()
     )
+
 
 @pytest.fixture
 def ascii_letter_string() -> Callable[[int], str]:

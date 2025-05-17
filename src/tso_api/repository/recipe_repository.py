@@ -24,6 +24,45 @@ class CursorStructure(BaseModel):
     last_id: UUID = Field(alias='i')
 
 
+def _decode_cursor(cursor: str) -> CursorStructure:
+    decoded_cursor = base64.urlsafe_b64decode(cursor).decode('utf-8')
+    return CursorStructure.model_validate_json(decoded_cursor)
+
+
+def _verify_cursor_struct(cursor_struct: CursorStructure, sort_field: RecipeSortField, sort_order: SortOrder):
+    if cursor_struct.sort_order != sort_order:
+        msg = "sort_order doesn't match"
+        raise CursorPaginationError(msg)
+
+    if cursor_struct.sort_field != sort_field:
+        msg = "sort_field doesn't match"
+        raise CursorPaginationError(msg)
+
+
+def _build_cursor_where_query(cursor_struct: CursorStructure) -> sql.Composed:
+    sort_order_symbol = sql.SQL('<') if cursor_struct.sort_order == SortOrder.DESC else sql.SQL('>')
+
+    return sql.SQL('(r.{sort_field}, r.id) {sort_order_symbol} (%(cursor_sort_value)s, %(cursor_sort_id)s)').format(
+        sort_field=sql.Identifier(cursor_struct.sort_field), sort_order_symbol=sort_order_symbol
+    )
+
+
+class WhereClause:
+    def __init__(self) -> None:
+        self.where_clause: list[sql.Composable] = []
+        self.params: dict[str, Any]
+
+    def add_clause(self, sql: sql.Composed, params: dict[str, Any]):
+        self.where_clause.append(sql)
+        self.params |= params
+
+    def build(self):
+        if len(self.where_clause) != 0:
+            self.where_clause.insert(0, sql.SQL('WHERE '))
+
+        return self.where_clause
+
+
 async def get_recipes_light_by_owner(
     cur: AsyncCursor[DictRow],
     limit: int,
@@ -31,29 +70,17 @@ async def get_recipes_light_by_owner(
     sort_order: SortOrder = SortOrder.DESC,
     cursor: str | None = None,
 ) -> tuple[list[DictRow], str | None]:
-    where_clause: list[sql.Composable] = []
-    where_clause_params: dict[str, Any] = {}
+    where_clause = WhereClause()
     if cursor:
-        decoded_cursor = base64.urlsafe_b64decode(cursor).decode('utf-8')
-        cursor_struct = CursorStructure.model_validate_json(decoded_cursor)
+        cursor_struct = _decode_cursor(cursor)
+        _verify_cursor_struct(cursor_struct, sort_field, sort_order)
 
-        if cursor_struct.sort_order != sort_order:
-            msg = "sort_order doesn't match"
-            raise CursorPaginationError(msg)
-        sort_order_symbol = sql.SQL('<') if cursor_struct.sort_order == SortOrder.DESC else sql.SQL('>')
-
-        if cursor_struct.sort_field != sort_field:
-            msg = "sort_field doesn't match"
-            raise CursorPaginationError(msg)
-
-        cursor_where_clause = sql.SQL(
-            '(r.{sort_field}, r.id) {sort_order_symbol} (%(cursor_sort_value)s, %(cursor_sort_id)s)'
-        ).format(sort_field=sql.Identifier(cursor_struct.sort_field), sort_order_symbol=sort_order_symbol)
-        where_clause.append(cursor_where_clause)
-        where_clause_params |= {'cursor_sort_value': cursor_struct.last_value, 'cursor_sort_id': cursor_struct.last_id}
-
-    if len(where_clause) != 0:
-        where_clause.insert(0, sql.SQL('WHERE '))
+        cursor_where_clause = _build_cursor_where_query(cursor_struct)
+        cursor_where_clause_params = {
+            'cursor_sort_value': cursor_struct.last_value,
+            'cursor_sort_id': cursor_struct.last_id,
+        }
+        where_clause.add_clause(cursor_where_clause, cursor_where_clause_params)
 
     sort_order_sql = sql.SQL('DESC') if sort_order == SortOrder.DESC else sql.SQL('ASC')
     query = sql.SQL("""SELECT
@@ -68,9 +95,11 @@ FROM tso.recipe r
 {where_clause}
 ORDER BY r.{sort_field} {sort_order}, r.id {sort_order}
 LIMIT %(limit)s""").format(
-        sort_field=sql.Identifier(sort_field), sort_order=sort_order_sql, where_clause=sql.Composed(where_clause)
+        sort_field=sql.Identifier(sort_field),
+        sort_order=sort_order_sql,
+        where_clause=sql.Composed(where_clause.build()),
     )
-    params = {'limit': limit + 1} | where_clause_params
+    params = {'limit': limit + 1} | where_clause.params
     res = await (await cur.execute(query, params)).fetchall()
 
     if len(res) != limit + 1:
