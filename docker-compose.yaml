@@ -4,12 +4,13 @@ services:
     ports:
       - 8000:8000
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable
-      - DATA_DIR=/data
-      - OIDC_WELL_KNOWN=
       - ENABLE_OPENAPI=true
+      - DATA_DIR=/data
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
     volumes:
       - ./data:/data
+    env_file:
+      - .env
   postgres:
     image: postgres:17@sha256:864831322bf2520e7d03d899b01b542de6de9ece6fe29c89f19dc5e1d5568ccf
     volumes:
