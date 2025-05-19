@@ -4,7 +4,7 @@
 from uuid import UUID
 
 from tso_api.models.base import Timestamps, TSOBase
-from tso_api.models.user import User
+from tso_api.models.user import User, UserResponse
 
 
 class CollectionBase(TSOBase):
@@ -17,6 +17,10 @@ class CollectionCreate(CollectionBase):
 
 class CollectionFull(CollectionBase, Timestamps):
     id: UUID
+
+
+class CollectionWithUsers(CollectionFull):
+    users: list[UserResponse]
 
 
 class CollectionMember(TSOBase):

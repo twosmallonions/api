@@ -68,7 +68,7 @@ oidc_auth = OIDCAuth(str(get_settings().oidc_well_known))
 
 
 async def get_user(jwt: Annotated[JWT, Depends(oidc_auth)], user_service: UserServiceDep) -> User:
-    return await user_service.get_or_create_user(jwt.sub, jwt.iss)
+    return await user_service.get_or_create_user(jwt)
 
 
 GetUser = Annotated[User, Depends(get_user)]

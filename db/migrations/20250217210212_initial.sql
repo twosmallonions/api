@@ -5,6 +5,7 @@
 CREATE ROLE tso_api_user;
 CREATE SCHEMA tso;
 GRANT usage ON SCHEMA tso TO tso_api_user;
+CREATE EXTENSION IF NOT EXISTS unaccent;
 
 ALTER DEFAULT PRIVILEGES 
   IN SCHEMA tso
@@ -40,16 +41,17 @@ CREATE TABLE tso.account (
     issuer TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    display_name TEXT,
     UNIQUE (subject, issuer),
     CHECK (length(subject) > 0),
-    CHECK (length(issuer) > 0)
+    CHECK (length(issuer) > 0),
+    CHECK (length(display_name) < 1000)
 );
 
 CREATE TRIGGER tso_account_update_updated_at BEFORE UPDATE
     ON tso.account 
     FOR EACH ROW
     EXECUTE FUNCTION tso.update_updated_at();
-
 
 
 CREATE INDEX ON tso.account USING hash (subject);

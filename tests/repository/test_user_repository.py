@@ -1,6 +1,7 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
+from uuid import uuid4
 import pytest
 from psycopg import AsyncConnection, IntegrityError
 from psycopg.rows import dict_row
@@ -14,7 +15,7 @@ async def test_create_user(conn: AsyncConnection, ascii_letter_string: AsciiLett
     sub = ascii_letter_string(30)
 
     async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
-        await user_repository.create_user(sub, iss, cur)
+        await user_repository.create_user(sub, iss, str(uuid4()), cur)
 
     async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
         res = await (await cur.execute('SELECT * FROM tso.account WHERE issuer = %s and subject = %s', (iss, sub))).fetchone()
@@ -28,14 +29,14 @@ async def test_create_user(conn: AsyncConnection, ascii_letter_string: AsciiLett
 async def test_create_user_empty(conn: AsyncConnection, iss: str, sub: str):
     async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
         with pytest.raises(IntegrityError):
-            await user_repository.create_user(sub, iss, cur)
+            await user_repository.create_user(sub, iss, str(uuid4()), cur)
 
 
 async def test_get_user(conn: AsyncConnection, ascii_letter_string: AsciiLetterString):
     iss = ascii_letter_string(30)
     sub = ascii_letter_string(30)
     async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
-        await user_repository.create_user(sub, iss, cur)
+        await user_repository.create_user(sub, iss, str(uuid4()), cur)
 
     async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
         res = await user_repository.get_user(sub, iss, cur)

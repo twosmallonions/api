@@ -10,9 +10,9 @@ from psycopg.errors import CheckViolation, InsufficientPrivilege
 from psycopg.rows import DictRow, dict_row
 
 from tests.repository.conftest import AsciiLetterString, UserFn
+from tso_api.exceptions import NoneAfterUpdateError
 from tso_api.models.user import User
 from tso_api.repository import collection_repository
-from tso_api.exceptions import NoneAfterUpdateError
 
 
 async def set_perms(user_id: UUID, cur: AsyncCursor[DictRow]):
@@ -177,3 +177,27 @@ async def test_normal_member_cannot_edit(user: UserFn, ascii_letter_string: Asci
 
         assert coll
         assert coll['name'] == coll_name
+
+
+async def test_get_collections_for_user_with_collection_members(user: UserFn, ascii_letter_string: AsciiLetterString, conn: AsyncConnection):
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        coll_member_1 = await user(cur)
+        coll_member_2 = await user(cur)
+        coll_owner, coll = await setup_collection_with_owner(cur, ascii_letter_string, user)
+        coll_id = coll['id']
+
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(coll_owner.id, cur)
+        await collection_repository.add_collection_member(coll_id, coll_member_1.id, cur)
+        await collection_repository.add_collection_member(coll_id, coll_member_2.id, cur)
+
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(coll_owner.id, cur)
+        res = await collection_repository.get_collections_for_user_with_collection_members(cur)
+
+        assert len(res) == 1
+        assert len(res[0]['users']) == 3
+
+        assert any(str(coll_member_1.id) == coll_member['id'] for coll_member in res[0]['users'])
+        assert any(str(coll_member_2.id) == coll_member['id'] for coll_member in res[0]['users'])
+        assert any(str(coll_owner.id) == coll_member['id'] for coll_member in res[0]['users'])

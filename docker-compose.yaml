@@ -12,14 +12,14 @@ services:
     env_file:
       - .env
   postgres:
-    image: postgres:17@sha256:864831322bf2520e7d03d899b01b542de6de9ece6fe29c89f19dc5e1d5568ccf
+    image: postgres:17
     volumes:
       - pg_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=postgres
     ports:
       - 5432:5432
-    command: postgres
+    command: postgres --log_statement=all
 
 volumes:
   pg_data:

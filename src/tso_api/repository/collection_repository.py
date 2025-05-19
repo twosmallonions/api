@@ -66,3 +66,19 @@ async def edit_collection(collection_id: UUID, new_name: str, cur: AsyncCursor[D
         raise NoneAfterUpdateError(msg, collection_id)
 
     return res
+
+async def get_collections_for_user_with_collection_members(cur: AsyncCursor[DictRow]):
+    query = """SELECT
+tso.collection.id, tso.collection.name, tso.collection.created_at, tso.collection.updated_at, (
+    SELECT array_agg (
+            json_build_object('id', tso.account.id, 'display_name', tso.account.display_name)
+            ORDER BY account.id
+        )
+    FROM
+        tso.account
+    INNER JOIN
+        tso.collection_member ON tso.collection_member.account_id = tso.account.id AND tso.collection_member.collection_id = collection.id
+    ) AS users
+FROM tso.collection
+"""
+    return await (await cur.execute(query)).fetchall()

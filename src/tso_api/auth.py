@@ -9,7 +9,7 @@ import jwt
 from fastapi import Depends
 from fastapi.security import OpenIdConnect
 from jwt import ExpiredSignatureError, InvalidKeyError, InvalidTokenError, PyJWKClient
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 from tso_api import config
 from tso_api.exceptions import AuthenticationError
@@ -22,10 +22,12 @@ class OIDCWellKnown(BaseModel):
 
 
 class JWT(BaseModel):
-    iss: str
-    sub: str
-    email: str
-    preferred_username: str
+    issuer: str = Field(validation_alias='iss')
+    subject: str = Field(validation_alias='sub')
+    preferred_username: str | None
+    email: str | None
+    name: str | None
+    given_name: str | None
 
 
 AUTHORIZATION_HEADER_PARTS = 2

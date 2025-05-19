@@ -63,6 +63,8 @@ ignore = [
   "D203",
   "D212",
   "D205",
+  "DOC201",
+  "FBT001",
   # maybe use these at some point
   "D100",
   "D101",

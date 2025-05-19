@@ -7,8 +7,12 @@ from uuid import UUID
 from tso_api.models.base import TSOBase
 
 
-class DatabaseUser(TSOBase):
+class BaseUser(TSOBase):
     id: UUID
+    display_name: str
+
+
+class DatabaseUser(BaseUser):
     subject: str
     issuer: str
     created_at: datetime
@@ -16,3 +20,11 @@ class DatabaseUser(TSOBase):
 
 class User(DatabaseUser):
     pass
+
+
+class UserResponse(BaseUser):
+    pass
+
+
+class AddUserToCollection(TSOBase):
+    id: UUID

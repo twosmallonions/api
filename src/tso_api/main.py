@@ -14,6 +14,7 @@ from tso_api.exceptions import ApiError, ApiHttpError, AuthenticationError
 from tso_api.routers.asset import router as asset_router
 from tso_api.routers.collection import router as collection_router
 from tso_api.routers.recipe import router as recipe_router
+from tso_api.routers.user import router as user_router
 
 
 class DBMigrationError(Exception):
@@ -50,6 +51,7 @@ app = FastAPI(lifespan=lifespan, docs_url=enable_openapi, redoc_url=None)
 app.include_router(collection_router)
 app.include_router(recipe_router)
 app.include_router(asset_router)
+app.include_router(user_router)
 origins = ['*']
 
 app.add_middleware(

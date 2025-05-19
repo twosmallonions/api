@@ -14,7 +14,7 @@ from tso_api.models.base import ListResponse
 from tso_api.models.query_params import RecipeQueryParams
 from tso_api.models.recipe import ImportRecipe, RecipeCreate, RecipeFull, RecipeLight, RecipeUpdate
 
-router = APIRouter(prefix='/api/recipe', tags=['recipe'])
+router = APIRouter(prefix='/api/recipe', tags=['Recipe'])
 
 
 @router.get('/')

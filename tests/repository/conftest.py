@@ -59,10 +59,10 @@ def user():
     async def __create(cur: AsyncCursor[DictRow]) -> User:
         subject = str(uuid.uuid4())
         issuer = 'https://idp.example.com'
-        await user_repository.create_user(subject, issuer, cur)
+        await user_repository.create_user(subject, issuer, str(uuid.uuid4()), cur)
         user = await user_repository.get_user(subject, issuer, cur)
         assert user
-        return User(id=user['id'], subject=user['subject'], issuer=user['issuer'], created_at=user['created_at'])
+        return User(id=user['id'], subject=user['subject'], issuer=user['issuer'], created_at=user['created_at'], display_name=user['display_name'])
 
     return __create
 
