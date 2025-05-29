@@ -7,8 +7,6 @@ import httpx
 from psycopg_pool.pool_async import AsyncConnectionPool
 from recipe_scrapers import (
     AbstractScraper,
-    ElementNotFoundInHtml,
-    FieldNotProvidedByWebsiteException,
     NoSchemaFoundInWildMode,
     RecipeSchemaNotFound,
     StaticValueException,
@@ -61,7 +59,7 @@ class RecipeImportService(BaseService):
 
     def _load_html_scrapers(self):
         classes = load_concrete_classes_from_pkg('tso_api.service.scraper.html', HTMLScraper)
-        scrapers: list[HTMLScraper] = [cls() for cls in classes]  # type: ignore
+        scrapers: list[HTMLScraper] = [cls() for cls in classes]  # type: ignore load_concrete_classes_from_pkg guarantees that the base class will not be returned
 
         scrapers.sort(key=lambda a: a.priority, reverse=True)
 

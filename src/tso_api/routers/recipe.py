@@ -66,3 +66,10 @@ async def add_thumbnail_to_recipe(
     await recipe_asset_service.add_cover_image_to_recipe(recipe_id, collection_id, user, file.file, file.filename)
 
     return await recipe_service.get_by_id(recipe_id, user)
+
+
+@router.delete('/{collection_id}/{recipe_id}/cover', status_code=204)
+async def delete_thumbnail_from_recipe(
+    collection_id: UUID, recipe_id: UUID, user: GetUser, recipe_asset_service: RecipeAssetServiceDep
+) -> None:
+    await recipe_asset_service.delete_assets_from_recipe(collection_id, recipe_id, user)

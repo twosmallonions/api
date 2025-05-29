@@ -67,6 +67,7 @@ async def edit_collection(collection_id: UUID, new_name: str, cur: AsyncCursor[D
 
     return res
 
+
 async def get_collections_for_user_with_collection_members(cur: AsyncCursor[DictRow]):
     query = """SELECT
 tso.collection.id, tso.collection.name, tso.collection.created_at, tso.collection.updated_at, (

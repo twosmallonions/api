@@ -11,6 +11,8 @@ CREATE TABLE tso.asset (
     collection_id UUID NOT NULL REFERENCES tso.collection (id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
+GRANT DELETE ON tso.asset TO tso_api_user;
+
 CREATE INDEX ON tso.asset (collection_id);
 
 ALTER TABLE tso.asset ENABLE ROW LEVEL SECURITY;

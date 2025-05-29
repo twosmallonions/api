@@ -27,7 +27,6 @@ RECIPE_COVER_IMAGE_MIME_TYPE = 'image/webp'
 
 
 class RecipeAssetService(BaseService):
-    # TODO: make file be something more generic
     async def add_cover_image_to_recipe(
         self, recipe_id: UUID, collection_id: UUID, user: User, file: BinaryIO, filename: str | None
     ):
@@ -39,6 +38,14 @@ class RecipeAssetService(BaseService):
             None, _save_image, cover_image, user.id, recipe_id, cover_image_id, RECIPE_COVER_IMAGE_FORMAT
         )
         async with self._begin(user.id) as cur:
+            existing_asset = await asset_repository.get_assets_by_recipe(recipe_id, collection_id, cur)
+            if (
+                existing_asset
+                and existing_asset['cover_image'] is not None
+                and existing_asset['cover_thumbnail'] is not None
+            ):
+                await _delete_existing_asset(existing_asset['cover_image'], collection_id, cur)
+                await _delete_existing_asset(existing_asset['cover_thumbnail'], collection_id, cur)
             await _create_asset(cover_image_path, filename, cover_image_id, collection_id, cur)
 
             thumbnail_image_id = uuid6.uuid7()
@@ -59,9 +66,27 @@ class RecipeAssetService(BaseService):
 
         return _asset_from_row(row)
 
+    async def delete_assets_from_recipe(self, collection_id: UUID, recipe_id: UUID, user: User):
+        async with self._begin(user.id) as cur:
+            assets = await asset_repository.get_assets_by_recipe(recipe_id, collection_id, cur)
+            if assets and assets['cover_image'] is not None and assets['cover_thumbnail'] is not None:
+                await _delete_existing_asset(assets['cover_image'], collection_id, cur)
+                await _delete_existing_asset(assets['cover_thumbnail'], collection_id, cur)
+
 
 def _asset_from_row(row: DictRow) -> Asset:
     return Asset.model_validate(row)
+
+
+async def _delete_existing_asset(asset_id: UUID, collection_id: UUID, cur: AsyncCursor[DictRow]):
+    asset = await asset_repository.get_asset_by_id(asset_id, collection_id, cur)
+    if not asset:
+        msg = 'asset'
+        raise ResourceNotFoundError(msg)
+
+    path = Path(asset['path'])
+    path.unlink(missing_ok=True)
+    await asset_repository.delete_asset_by_id(asset_id, collection_id, cur)
 
 
 async def _create_asset(

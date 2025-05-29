@@ -6,7 +6,7 @@ from uuid import UUID
 from psycopg import AsyncCursor
 from psycopg.rows import DictRow
 
-from tso_api.exceptions import NoneAfterInsertError
+from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
 from tso_api.models.asset import AssetBase
 
 
@@ -38,3 +38,19 @@ async def get_asset_by_id(asset_id: UUID, collection_id: UUID, cur: AsyncCursor[
     res = await cur.execute(query, (asset_id, collection_id))
 
     return await res.fetchone()
+
+
+async def get_assets_by_recipe(recipe_id: UUID, collection_id: UUID, cur: AsyncCursor[DictRow]):
+    query = 'SELECT cover_image, cover_thumbnail FROM tso.recipe WHERE collection_id = %s and id = %s'
+    res = await cur.execute(query, (collection_id, recipe_id))
+
+    return await res.fetchone()
+
+
+async def delete_asset_by_id(asset_id: UUID, collection_id: UUID, cur: AsyncCursor[DictRow]):
+    query = 'DELETE FROM tso.asset WHERE collection_id = %s AND id = %s'
+    res = await cur.execute(query, (collection_id, asset_id))
+
+    if res.rowcount == 0:
+        msg = 'asset'
+        raise NoneAfterUpdateError(msg, asset_id)
