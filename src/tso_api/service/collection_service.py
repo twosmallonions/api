@@ -30,6 +30,7 @@ class CollectionService(BaseService):
     async def add_collection_member(self, collection_id: UUID, user: User):
         async with self._begin(user.id) as cur:
             await collection_repository.add_collection_member(collection_id, user.id, cur)
+
     async def get_collections_for_user_with_members(self, user: User):
         async with self._begin(user.id) as cur:
             await collection_repository.get_collections_for_user_with_collection_members(cur)

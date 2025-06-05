@@ -7,19 +7,15 @@ import shutil
 import string
 import subprocess
 import uuid
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 
 import psycopg
 import pytest
 from psycopg import AsyncConnection, AsyncCursor
 from psycopg.rows import DictRow, dict_row
-from testcontainers.postgres import PostgresContainer
 
 from tso_api.models.user import User
 from tso_api.repository import collection_repository, user_repository
-
-postgres = PostgresContainer('postgres:17')
-
 
 AsciiLetterString = Callable[[int], str]
 
@@ -29,21 +25,15 @@ def ascii_letter_string() -> AsciiLetterString:
     return lambda n: ''.join(random.choices(string.ascii_letters, k=n))
 
 
-@pytest.fixture(scope="package")
-def setup_db() -> Generator[str]:
-    db_url = ''
-    if os.environ.get('DATABASE_URL'):
-        db_url = os.environ['DATABASE_URL']
-    else:
-        postgres.start()
-        db_url = f'postgresql://{postgres.username}:{postgres.password}@{postgres.get_container_host_ip()}:{postgres.get_exposed_port(5432)}/{postgres.dbname}?sslmode=disable'
+@pytest.fixture(scope='package')
+def setup_db() -> str:
+    db_url = os.environ['DATABASE_URL']
     dbmate_path = shutil.which('dbmate')
     if dbmate_path is None:
-        raise Exception("dbmate not found")
+        raise Exception('dbmate not found')
     subprocess.run([dbmate_path, '-u', db_url, 'up'], check=True)
 
-    yield db_url
-    postgres.stop()
+    return db_url
 
 
 @pytest.fixture
@@ -62,7 +52,13 @@ def user():
         await user_repository.create_user(subject, issuer, str(uuid.uuid4()), cur)
         user = await user_repository.get_user(subject, issuer, cur)
         assert user
-        return User(id=user['id'], subject=user['subject'], issuer=user['issuer'], created_at=user['created_at'], display_name=user['display_name'])
+        return User(
+            id=user['id'],
+            subject=user['subject'],
+            issuer=user['issuer'],
+            created_at=user['created_at'],
+            display_name=user['display_name'],
+        )
 
     return __create
 
@@ -76,7 +72,7 @@ def user_col_fn(user: UserFn) -> UserColFn:
 
     async def __create(cur: AsyncCursor[DictRow]) -> tuple[User, uuid.UUID]:
         user = await user_fn(cur)
-        coll = await collection_repository.new_collection("Default", cur)
+        coll = await collection_repository.new_collection('Default', cur)
         await collection_repository.add_collection_owner(coll['id'], user.id, cur)
         return (user, coll['id'])
 

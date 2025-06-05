@@ -2,21 +2,14 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 
-import os
 import random
-import shutil
 import string
-import subprocess
 import uuid
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 
 import pytest
-from psycopg_pool import AsyncConnectionPool
-from testcontainers.postgres import PostgresContainer
 
 from tso_api.models.recipe import RecipeCreate, RecipeUpdate
-
-postgres = PostgresContainer('postgres:17')
 
 
 @pytest.fixture
@@ -33,8 +26,9 @@ def recipe_create_fn(ascii_letter_string: Callable[[int], str]) -> Callable[[], 
             cook_time=random.randint(0, 80),
             prep_time=random.randint(0, 80),
             recipe_yield=ascii_letter_string(5),
-            collection=uuid.uuid4()
+            collection=uuid.uuid4(),
         )
+
     return __run
 
 
@@ -54,8 +48,9 @@ def recipe_update():
         prep_time=updated_prep_time,
         recipe_yield=str(updated_recipe_yield),
         liked=updated_liked,
-        collection=uuid.uuid4()
+        collection=uuid.uuid4(),
     )
+
 
 @pytest.fixture
 def ascii_letter_string() -> Callable[[int], str]:

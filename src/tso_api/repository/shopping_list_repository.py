@@ -3,37 +3,11 @@
 
 from uuid import UUID
 
-from psycopg import AsyncCursor
+from psycopg import AsyncCursor, sql
 from psycopg.rows import DictRow
 from uuid6 import uuid7
 
 from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
-
-INSERT_SHOPPING_LIST_QUERY = """INSERT INTO
-shopping_lists
-    (id, owner, title)
-VALUES (%(id)s, %(owner)s, %(title)s)"""
-
-INSERT_SHOPPING_LIST_ENTRY_QUERY = """INSERT INTO
-list_entries
-    (id, name, note, shopping_list)
-VALUES (%(id)s, %(name)s, %(note)s, %(shopping_list)s)"""
-
-SELECT_SHOPPING_LISTS = """SELECT
-l.id, l.owner, l.title, l.created_at, l.updated_at
-FROM shopping_lists l
-WHERE l.id = %(id)s AND l.owner = %(owner)s
-"""
-
-SELECT_SHOPPING_LISTS_WITH_ENTRIES = """SELECT
-* FROM shopping_lists_with_entries led
-WHERE led.id = %(id)s AND led.owner = %(owner)s
-"""
-
-UPDATE_ENTRY_SET_COMPLETED = """UPDATE
-list_entries SET completed = true
-WHERE id = %(id)s AND owner = %(owner)s
-"""
 
 
 async def create_list(title: str, collection_id: UUID, cur: AsyncCursor[DictRow]):
@@ -68,6 +42,8 @@ async def update_list(title: str, list_id: UUID, collection_id: UUID, cur: Async
         msg = 'list'
         raise NoneAfterUpdateError(msg, list_id)
 
+    return row
+
 
 async def add_entry_to_list(name: str, list_id: UUID, cur: AsyncCursor[DictRow]):
     query = """INSERT INTO
@@ -96,13 +72,14 @@ async def unset_list_entry_completed(entry_id: UUID, list_id: UUID, cur: AsyncCu
     await _update_entry_completed(False, entry_id, list_id, cur)  # noqa: FBT003
 
 
-async def _update_entry_completed(completed: bool, entry_id: UUID, list_id: UUID, cur: AsyncCursor[DictRow]) -> None:  # noqa: FBT001
-    query = """UPDATE
+async def _update_entry_completed(completed: bool, entry_id: UUID, list_id: UUID, cur: AsyncCursor[DictRow]) -> None:
+    completed_at = 'now()' if completed else 'null'
+    query = sql.SQL("""UPDATE
     tso.list_entry
-    SET completed = %s
-    WHERE id = %s AND list_id = %s"""
+    SET completed_at = {completed_at}
+    WHERE id = %s AND list_id = %s""").format(completed_at=sql.SQL(completed_at))
 
-    res = await cur.execute(query, (completed, entry_id, list_id))
+    res = await cur.execute(query, (entry_id, list_id))
 
     if res.rowcount == 0:
         msg = 'list_entry'

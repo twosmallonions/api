@@ -65,7 +65,7 @@ def make_recipe(fake):
     }
 
 
-def get_default_collection(api_base_url, access_token: str, http: Client) -> UUID:
+def get_default_collection(api_base_url: str, access_token: str, http: Client) -> UUID:
     resp = http.get(f'{api_base_url}/api/collection/', headers={'Authorization': f'Bearer {access_token}'})
     resp.raise_for_status()
 

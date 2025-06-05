@@ -2,7 +2,6 @@
     "include": ["src", "tests"],
     "typeCheckingMode": "strict",
     "pythonVersion": "3.13",
-    "allowedUntypedLibraries": ["testcontainers.postgres"],
     "reportUnusedCallResult" : false,
     "reportUnannotatedClassAttribute": false,
     "reportAny": false,

@@ -24,12 +24,12 @@ CREATE TRIGGER tso_shopping_list_update_updated_at BEFORE UPDATE
 CREATE TABLE tso.list_entry (
     id uuid PRIMARY KEY,
     name TEXT NOT NULL CHECK (length(name) > 0 AND length(name) < 500),
-    note TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '' CHECK(length(note) < 1000),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     list_id uuid REFERENCES tso.shopping_list (id) ON DELETE RESTRICT ON UPDATE RESTRICT NOT NULL,
-    completed boolean NOT NULL DEFAULT false,
-    completed_at timestamptz
+    completed_at timestamptz,
+    completed BOOLEAN GENERATED ALWAYS AS (completed_at IS NOT NULL) STORED
 );
 
 CREATE INDEX ON tso.list_entry (list_id);
@@ -50,26 +50,6 @@ CREATE TRIGGER tso_shopping_list_entry_update_updated_at BEFORE UPDATE
   ON tso.list_entry
   FOR EACH ROW
   EXECUTE FUNCTION tso.update_updated_at();
-
-CREATE FUNCTION tso.set_completed_at_timestamp() RETURNS trigger
-AS $$
-BEGIN
-    IF (TG_OP = 'UPDATE' AND OLD.completed = false AND NEW.completed = true) THEN
-        NEW.completed_at = now();
-    ELSIF (TG_OP = 'UPDATE' AND OLD.completed = true and NEW.completed = false) THEN
-        NEW.completed_at = null;
-    ELSIF (TG_OP = 'INSERT' AND NEW.completed = true) THEN
-        NEW.completed_at = now();
-    END IF;
-
-    RETURN new;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER tso_shopping_list_entry_set_completed_at BEFORE INSERT OR UPDATE OF completed
-    ON tso.list_entry
-    FOR EACH ROW
-    EXECUTE FUNCTION tso.set_completed_at_timestamp();
 
 -- migrate:down
 DROP TABLE list_entry;

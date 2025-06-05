@@ -19,6 +19,7 @@ from tso_api.service.collection_service import CollectionService
 from tso_api.service.recipe_asset import RecipeAssetService
 from tso_api.service.recipe_import_service import RecipeImportService
 from tso_api.service.recipe_service import RecipeService
+from tso_api.service.shopping_list_service import ShoppingListService
 from tso_api.service.user_service import UserService
 
 DBConn = Annotated[AsyncConnection, Depends(get_connection)]
@@ -44,10 +45,16 @@ def get_user_service(db_pool_fn: Annotated[AsyncConnectionPool[Any], Depends(db_
     return UserService(db_pool_fn)
 
 
+@cache
+def get_shopping_list_service(db_pool_fn: Annotated[AsyncConnectionPool[Any], Depends(db_pool_fn)]):
+    return ShoppingListService(db_pool_fn)
+
+
 RecipeServiceDep = Annotated[RecipeService, Depends(get_recipe_service)]
 RecipeAssetServiceDep = Annotated[RecipeAssetService, Depends(get_recipe_asset_service)]
 CollectionServiceDep = Annotated[CollectionService, Depends(get_collection_service)]
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
+ShoppingListServiceDep = Annotated[ShoppingListService, Depends(get_shopping_list_service)]
 
 
 @cache
