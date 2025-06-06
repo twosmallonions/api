@@ -1,6 +1,6 @@
 FROM python:3.13-bookworm@sha256:be97a205ac2f0d0662cc312d5cfeb835129f23dd9bc9559e02d686656af1bd52 AS builder
 
-COPY --from=ghcr.io/astral-sh/uv:0.7.10@sha256:8cb222a0ab487c56ca1368c9f6c221b7fb008a0e4bb81ee623ef1f9d7b08fb6c /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.7.12@sha256:4faec156e35a5f345d57804d8858c6ba1cf6352ce5f4bffc11b7fdebdef46a38 /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 RUN apt-get update \
