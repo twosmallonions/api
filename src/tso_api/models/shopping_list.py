@@ -21,7 +21,6 @@ class ShoppingListEntryCreate(ShoppingListEntryBase):
 
 class ShoppingListEntry(ShoppingListEntryBase, Timestamps):
     id: UUID
-    list_id: UUID
     completed: bool
     completed_at: datetime | None = None
 

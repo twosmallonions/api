@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from psycopg import AsyncConnection, AsyncCursor
@@ -128,3 +128,46 @@ async def test_toggle_completed(
 
         assert not res['entries'][0]['completed']
         assert not res['entries'][0]['completed_at']
+
+
+async def test_get_lists(user_col_fn: UserColFn, conn: AsyncConnection):
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        user, coll = await user_col_fn(cur)
+        user2, coll2 = await user_col_fn(cur)
+
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user.id, cur)
+        await shopping_list_repository.create_list(str(uuid4()), coll, cur)
+        await shopping_list_repository.create_list(str(uuid4()), coll, cur)
+
+        lists = await shopping_list_repository.get_lists(cur)
+
+        assert len(lists) == 2
+
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user2.id, cur)
+        await shopping_list_repository.create_list(str(uuid4()), coll2, cur)
+        await shopping_list_repository.create_list(str(uuid4()), coll2, cur)
+
+        lists = await shopping_list_repository.get_lists(cur)
+
+        assert len(lists) == 2
+
+
+async def test_get_lists_entries_count(
+    user_list_fn: UserListFn, ascii_letter_string: AsciiLetterString, conn: AsyncConnection
+):
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        user, _, s_list = await user_list_fn(cur, ascii_letter_string)
+
+    async with conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
+        await set_perms(user.id, cur)
+        list_entry = await shopping_list_repository.add_entry_to_list('entry1', s_list, cur)
+        await shopping_list_repository.add_entry_to_list('entry2', s_list, cur)
+        await shopping_list_repository.set_list_entry_completed(list_entry['id'], s_list, cur)
+
+        lists = await shopping_list_repository.get_lists(cur)
+
+        assert len(lists) == 1
+        assert lists[0]['entries_total'] == 2
+        assert lists[0]['entries_not_completed'] == 1

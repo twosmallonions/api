@@ -21,7 +21,6 @@ class ShoppingListService(BaseService):
     async def create_list(
         self, list_data: ShoppingListCreate, collection_id: UUID, user: User
     ) -> ShoppingListWithEntries:
-        # The user's identity is passed to _begin for RLS
         async with self._begin(user.id) as cur:
             row = await shopping_list_repository.create_list(list_data.title, collection_id, cur)
             return _shopping_list_from_row(row)
@@ -37,7 +36,6 @@ class ShoppingListService(BaseService):
         self, entry_data: ShoppingListEntryCreate, list_id: UUID, user: User
     ) -> ShoppingListEntry:
         async with self._begin(user.id) as cur:
-            # The repository only uses the 'name' field for insertion
             row = await shopping_list_repository.add_entry_to_list(entry_data.name, list_id, cur)
             return _list_entry_from_row(row)
 
@@ -59,12 +57,11 @@ def _list_entry_from_row(row: DictRow) -> ShoppingListEntry:
     return ShoppingListEntry(
         id=row['id'],
         name=row['name'],
-        note=row.get('note', ''),
+        note=row['note'],
         created_at=row['created_at'],
         updated_at=row['updated_at'],
-        list_id=row['list_id'],
         completed=row['completed'],
-        completed_at=row.get('completed_at'),
+        completed_at=row['completed_at'],
     )
 
 

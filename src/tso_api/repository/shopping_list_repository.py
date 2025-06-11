@@ -1,6 +1,7 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
+from typing import Dict
 from uuid import UUID
 
 from psycopg import AsyncCursor, sql
@@ -8,6 +9,28 @@ from psycopg.rows import DictRow
 from uuid6 import uuid7
 
 from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
+
+
+async def get_lists(cur: AsyncCursor[DictRow]) -> list[DictRow]:
+    query = sql.SQL("""SELECT
+   shopping_list.id,
+   shopping_list.title,
+   shopping_list.collection_id,
+   shopping_list.created_at,
+   shopping_list.updated_at,
+    (
+        SELECT COUNT(*) FROM tso.list_entry AS list_entry WHERE list_entry.list_id = shopping_list.id
+    ) AS entries_total,
+    (
+        SELECT COUNT(*) FROM tso.list_entry AS list_entry WHERE list_entry.list_id = shopping_list.id AND list_entry.completed = false
+    ) AS entries_not_completed
+    FROM tso.shopping_list AS shopping_list
+    ORDER BY shopping_list.title DESC
+    """)
+
+    res = await cur.execute(query)
+
+    return await res.fetchall()
 
 
 async def create_list(title: str, collection_id: UUID, cur: AsyncCursor[DictRow]):
