@@ -1,7 +1,6 @@
 # Copyright 2025 Marius Meschter
 # SPDX-License-Identifier: AGPL-3.0-only
 
-from typing import Dict
 from uuid import UUID
 
 from psycopg import AsyncCursor, sql
@@ -12,20 +11,25 @@ from tso_api.exceptions import NoneAfterInsertError, NoneAfterUpdateError
 
 
 async def get_lists(cur: AsyncCursor[DictRow]) -> list[DictRow]:
-    query = sql.SQL("""SELECT
-   shopping_list.id,
-   shopping_list.title,
-   shopping_list.collection_id,
-   shopping_list.created_at,
-   shopping_list.updated_at,
-    (
-        SELECT COUNT(*) FROM tso.list_entry AS list_entry WHERE list_entry.list_id = shopping_list.id
-    ) AS entries_total,
-    (
-        SELECT COUNT(*) FROM tso.list_entry AS list_entry WHERE list_entry.list_id = shopping_list.id AND list_entry.completed = false
-    ) AS entries_not_completed
-    FROM tso.shopping_list AS shopping_list
-    ORDER BY shopping_list.title DESC
+    query = sql.SQL("""WITH list_stats AS (
+    SELECT
+        list_id,
+        COUNT(*) AS entries_total,
+        COUNT(*) FILTER (WHERE completed = false) AS entries_not_completed
+    FROM tso.list_entry
+    GROUP BY list_id
+)
+SELECT
+    sl.id,
+    sl.title,
+    sl.collection_id,
+    sl.created_at,
+    sl.updated_at,
+    COALESCE(ls.entries_total, 0) AS entries_total,
+    COALESCE(ls.entries_not_completed, 0) AS entries_not_completed
+FROM tso.shopping_list AS sl
+LEFT JOIN list_stats ls ON sl.id = ls.list_id
+ORDER BY sl.title DESC
     """)
 
     res = await cur.execute(query)
