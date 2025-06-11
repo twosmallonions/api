@@ -16,7 +16,7 @@ dependencies = [
     "pyjwt[crypto]==2.10.1",
     "python-multipart==0.0.20",
     "recipe-scrapers==15.7.1",
-    "uuid6==2024.7.10",
+    "uuid6==2025.0.0",
 ]
 
 [build-system]
