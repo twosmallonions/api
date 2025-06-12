@@ -41,3 +41,8 @@ class ShoppingList(ShoppingListBase, Timestamps):
 class ShoppingListWithEntries(ShoppingList):
     entries: list[ShoppingListEntry] = []
     entries_num: int = 0
+
+
+class ShoppingListListEntry(ShoppingList):
+    entries_total: int
+    entries_not_completed: int

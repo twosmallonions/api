@@ -17,7 +17,7 @@ class CollectionService(BaseService):
             coll = await collection_repository.new_collection(collection.name, cur)
             coll_id = coll['id']
 
-            await collection_repository.add_collection_member(coll_id, user.id, cur)
+            await collection_repository.add_collection_owner(coll_id, user.id, cur)
 
         return _collection_from_row(coll)
 

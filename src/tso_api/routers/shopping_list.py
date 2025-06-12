@@ -10,6 +10,7 @@ from tso_api.models.shopping_list import (
     ShoppingListCreate,
     ShoppingListEntry,
     ShoppingListEntryCreate,
+    ShoppingListListEntry,
     ShoppingListWithEntries,
 )
 
@@ -21,6 +22,11 @@ async def create_shopping_list(
     collection_id: UUID, list_data: ShoppingListCreate, user: GetUser, shopping_list_service: ShoppingListServiceDep
 ) -> ShoppingListWithEntries:
     return await shopping_list_service.create_list(list_data, collection_id, user)
+
+
+@router.get('/', summary='Get all shopping lists for the current user')
+async def get_shopping_lists(user: GetUser, shopping_list_service: ShoppingListServiceDep) -> list[ShoppingListListEntry]:
+    return await shopping_list_service.get_lists(user)
 
 
 @router.get('/{list_id}', summary='Get a specific shopping list')

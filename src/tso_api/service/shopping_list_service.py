@@ -10,6 +10,7 @@ from tso_api.models.shopping_list import (
     ShoppingListCreate,
     ShoppingListEntry,
     ShoppingListEntryCreate,
+    ShoppingListListEntry,
     ShoppingListWithEntries,
 )
 from tso_api.models.user import User
@@ -51,6 +52,24 @@ class ShoppingListService(BaseService):
         async with self._begin(user.id) as cur:
             row = await shopping_list_repository.get_list(list_id, cur)
             return _shopping_list_from_row(row)
+
+    async def get_lists(self, user: User) -> list[ShoppingListListEntry]:
+        async with self._begin(user.id) as cur:
+            rows = await shopping_list_repository.get_lists(cur)
+
+            return [_shopping_list_list_entry_from_row(row) for row in rows]
+
+
+def _shopping_list_list_entry_from_row(row: DictRow) -> ShoppingListListEntry:
+    return ShoppingListListEntry(
+        id=row['id'],
+        title=row['title'],
+        collection_id=row['collection_id'],
+        created_at=row['created_at'],
+        updated_at=row['updated_at'],
+        entries_not_completed=row['entries_not_completed'],
+        entries_total=row['entries_total']
+    )
 
 
 def _list_entry_from_row(row: DictRow) -> ShoppingListEntry:
