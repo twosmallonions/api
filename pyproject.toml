@@ -15,7 +15,7 @@ dependencies = [
     "pyhumps==3.8.0",
     "pyjwt[crypto]==2.10.1",
     "python-multipart==0.0.20",
-    "recipe-scrapers==15.7.1",
+    "recipe-scrapers==15.8.0",
     "uuid6==2025.0.0",
 ]
 
