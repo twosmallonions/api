@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
   postgres:
-    image: postgres:17@sha256:6cf6142afacfa89fb28b894d6391c7dcbf6523c33178bdc33e782b3b533a9342
+    image: postgres:17@sha256:e6a4209d1a4893f2df3bdcde58f8926c3c929c4d51df90990ed1b36d83c1382a
     volumes:
       - pg_data:/var/lib/postgresql/data
     environment:
